@@ -23,14 +23,16 @@ DESCRIPTION = """
 
 comparison_functions = {}
 display_functions = {}
-ignored_variables = set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
-                         'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
-ignored_normal_arrays = set(['BASH_LINENO'])
-
 p = argparse.ArgumentParser()
 p.add_argument("--list-diff", action='store_true')
+p.add_argument("--no-ignore", action='store_true')
 p.add_argument("files", nargs=2)
 args = p.parse_args()
+ignored_variables = set() if args.no_ignore else \
+                    set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
+                         'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
+ignored_normal_arrays = set() if args.no_ignore else set(['BASH_LINENO'])
+
 
 def main():
     """

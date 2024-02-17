@@ -24,7 +24,9 @@ env-diff(){
     while [[ "$1" == -* ]] ; do
         case "$1" in
             --list-diff) _env_diff_compare_args+=(--list-diff); shift ;;
+            --no-ignore) _env_diff_compare_args+=(--no-ignore); shift ;;
             --keep-tmpdir) _env_diff_keep_tmpdir=true ; shift ;;
+            --) shift ; break ;;
             *) echo "env-diff: ERROR unknown argument '$1'" >&2 ; return 1 ;;
         esac
     done
