@@ -247,28 +247,12 @@ _env-diff-normal_arrays_to_json(){
 }
 
 ################################################################################
-# Run a simple test to manually confirm that most parts are working
+# Save traps to JSON.  Save the special bash only traps ERR, EXIT, DEBUG, RETURN
+# and save all the traps for UNIX signals from signals.h.  Since these numbers
+# are not the same on all systems but they seem to always be sequencial, we just
+# check signals starting at 1 and incrementing by 1 until the trap command
+# returns a non-zero exit code.
 ################################################################################
-_env-diff-test(){
-    g(){
-        echo "This is G"
-    }
-    echo "------------------ TEST 1"
-    env-diff 'A=B;
-    export X=Y;
-    unset USER;
-    f(){ echo "hello" ; };
-    g(){ echo "This is new G" ; };
-    declare -A assoc; assoc[y]=v;
-    BASH_ALIASES[booggers]=balls;
-    PATH=BANANNA:${PATH}:APPLE:;
-    shopt -so errexit;
-    shopt -u sourcepath;'
-    echo "------------------ TEST 2"
-    env-diff 'PATH=${PATH}:'
-}
-if [[ "$1" != "" ]] ; then _env-diff-test ; fi
-
 _env-diff-traps_to_json(){
     local t s
     {
@@ -310,3 +294,27 @@ _env-diff-traps_to_json(){
                        | reduce range(0;'${_env_diff_jq_length_str}'/2) as $i
                          ({}; . + {($a[2*$i]): ($a[2*$i + 1])})'
 }
+
+################################################################################
+# Run a simple test to manually confirm that most parts are working
+################################################################################
+_env-diff-test(){
+    g(){
+        echo "This is G"
+    }
+    echo "------------------ TEST 1"
+    env-diff 'A=B;
+    export X=Y;
+    unset USER;
+    f(){ echo "hello" ; };
+    g(){ echo "This is new G" ; };
+    declare -A assoc; assoc[y]=v;
+    BASH_ALIASES[booggers]=balls;
+    PATH=BANANNA:${PATH}:APPLE:;
+    shopt -so errexit;
+    shopt -u sourcepath;'
+    echo "------------------ TEST 2"
+    env-diff 'PATH=${PATH}:'
+}
+if [[ "$1" != "" ]] ; then _env-diff-test ; fi
+
