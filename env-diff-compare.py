@@ -4,6 +4,14 @@ import sys
 import difflib
 import re
 import argparse
+try:
+    import pygments
+    import pygments.formatters
+    import pygments.lexers.shell
+    import pygments.styles
+    import pygments.token
+except:
+    pass
 
 DESCRIPTION = """
     Report the difference caused on the shell environment by a command.
@@ -47,7 +55,8 @@ def main():
     compare_normal_arrays(before.normal_arrays, after.normal_arrays)
     compare_shell_options(before.shopt, after.shopt, from_set=False)
     compare_shell_options(before.shopt_set, after.shopt_set, from_set=True)
-    compare_shell_functions(before.functions, after.functions)
+    compare_shell_functions(before.functions, after.functions, True)
+    compare_traps(before.traps, after.traps)
 
 class ShellEnvironmentData:
     """
@@ -78,6 +87,8 @@ class ShellEnvironmentData:
                 with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash")) as func:
                     lines = func.read().splitlines()[2:]
                     self.functions[name] = lines
+        with open(os.path.join(data_dir, f"traps.json")) as f:
+            self.traps = json.load(f)
 
 def compare_variables(i: dict,f: dict, env):
     """
@@ -204,13 +215,13 @@ def compare_shell_functions(i: dict, f: dict, show_new_defs=True):
 
     if new or deleted or changed:
         print("\033[1m================= SHELL FUNCTIONS ================\033[0m")
-    
+
     if new:
         print('\033[4;32mNew functions\033[0m')
         for func in sorted(new):
             if show_new_defs:
-                print(f"{func}()", end='')
-                print('\n'.join(f[func]))
+                print(f"\033[1m{func}\033[0m()", end='')
+                print(highlight('\n'.join(f[func])))
             else:
                 print(func)
 
@@ -223,7 +234,36 @@ def compare_shell_functions(i: dict, f: dict, show_new_defs=True):
         print('\033[4;33mModified functions\033[0m')
         for func in changed:
             print(f"\033[1;35m{func}()\033[0m")
-            compare_bash_func(i[func], f[func])
+            diff_compare(i[func], f[func])
+
+
+def compare_traps(i: dict, f: dict):
+    """
+    Compare sets of shell functions
+    """
+    new = set(f.keys()) - set(i.keys())
+    deleted = set(i.keys()) - set(f.keys())
+    common = set(i.keys()).intersection(set(f.keys()))
+    changed = sorted(filter(lambda v: i[v] != f[v], common))
+
+    if new or deleted or changed:
+        print("\033[1m================= TRAPS ================\033[0m")
+
+    if new:
+        print('\033[4;32mNew traps\033[0m')
+        for t in sorted(new):
+            print(f"{t}: {f[t]}")
+
+    if deleted:
+        print('\033[4;31mDeleted traps\033[0m')
+        for t in sorted(deleted):
+            print(f"{t}")
+
+    if changed:
+        print('\033[4;33mModified traps\033[0m')
+        for t in changed:
+            print(f"\033[1;35mtrap on {t}\033[0m")
+            diff_compare(i[t].splitlines(), f[t].splitlines(), indent='    ')
 
 ################################################################################
 # Display and comparison functions for individual variables, arrays and functions
@@ -297,7 +337,7 @@ def setup_function_dictionnaries(display, comparison):
     space_lists = [
         'EC_LD_LIBRARY_PATH', 'SSMUSE_PLATFORMS', 'JOBCTL_PBS_CELLS',
         'ORDENV_PLATFORMS', 'ORDENV_USER_PROFILES',
-        'ORDENV_USER_PROFILE_FILENAMES'
+        'ORDENV_USER_PROFILE_FILENAMES', 'EC_INCLUDE_PATH'
     ]
     for n in colon_lists:
         comparison[n] = compare_colon_lists
@@ -306,9 +346,9 @@ def setup_function_dictionnaries(display, comparison):
 
 def compare_exported_bash_func(name, before, after):
     print(name)
-    compare_bash_func(before.splitlines(), after.splitlines())
+    diff_compare(before.splitlines(), after.splitlines())
 
-def compare_bash_func(before, after):
+def diff_compare(before, after, indent=''):
     diff_colors = {'+': '\033[32m', ' ': '', '-': '\033[31m', '?': '\033[36m'}
     def diff():
         for l in difflib.unified_diff(before, after, fromfile="before", tofile="after"):
@@ -317,8 +357,32 @@ def compare_bash_func(before, after):
             color = '\033[1;34m' \
                     if l.startswith('+++') or l.startswith('---') or l.startswith('@@') \
                     else diff_colors.get(l[0],'')
-            yield f"{color}{l.strip()}\033[0m"
-    print('\n'.join(diff()))
+            yield f"{color}{l.rstrip()}\033[0m"
+    print(indent + ('\n'+indent).join(diff()))
+
+if 'pygments' in sys.modules:
+    def get_formatter():
+        styles = list(pygments.styles.get_all_styles())
+        style = 'default'
+        # Solarized light is for light background but I tried it on dark background
+        # and it looks great
+        potential_styles = ['solarized-light', 'vim', 'monokai', 'arduino',
+                            'emacs', 'native', 'lovelace', 'paraiso-dark',
+                            'rainbow_dash', 'rrt', 'perldoc', 'solarized-dark',
+                            'sas', 'stata-dark', 'dracula', 'colorful']
+        for s in potential_styles:
+            if s in styles:
+                style = s
+                break
+        return pygments.formatters.Terminal256Formatter(style=style)
+
+    lexer = pygments.lexers.shell.BashLexer()
+    fmt = get_formatter()
+    def highlight(code):
+        return pygments.highlight(code, lexer=lexer, formatter=fmt)
+else:
+    def highlight(code):
+        return code
 
 if __name__ == "__main__":
     main()
