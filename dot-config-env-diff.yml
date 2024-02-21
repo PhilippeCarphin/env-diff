@@ -24,13 +24,17 @@ colon_lists:
 # space_lists:
 ignored_variables:
   - BASHPID
+  - BASHOPTS
   - BASH_SUBSHELL
   - EPOCHREALTIME
   - EPOCHSECONDS
   - RANDOM
   - SECONDS
+  - SHELLOPTS
   - SRANDOM
 ignored_normal_arrays:
+  - BASH_ARGC
+  - BASH_ARGV
   - BASH_LINENO
 ignored_assoc_arrays:
   - BASH_CMDS
