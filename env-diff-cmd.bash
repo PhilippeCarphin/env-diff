@@ -6,6 +6,25 @@ fi
 
 _env_diff_root="$(cd -P $(dirname ${BASH_SOURCE[0]}) && pwd)"
 
+_env-diff-short_help(){
+    cat <<- EOF
+		env-diff [options] COMMAND
+
+		    Display the effect of COMMAND on the shell environment: exported
+		    variables, unexported variables, arrays, associative arrays, shell
+		    functions, shell options and traps.
+
+		OPTIONS
+		    --list-diff      Use diff for list comparison
+		    --no-ignore      Bypass ignoring of variables
+		    -F CONFIG FILE   Use alternate config file
+		    --keep-tmpdir    Do not delete temp dir after running
+		    --local-tmpdir   Create temp dir in PWD
+		    --help           Display manpage for env-diff
+		    -h               Display this help text and exit
+	EOF
+}
+
 ################################################################################
 # Toplevel command.  This function is separate from _env_diff_internal simply
 # to allow early returns in _env_diff_internal while still ensuring that the
@@ -52,8 +71,11 @@ env-diff(){
             -F)          _env_diff_compare_args+=(-F $2); shift ; shift ;;
             --keep-tmpdir) _env_diff_keep_tmpdir=true ; shift ;;
             --local-tmpdir) _env_diff_local_tmpdir=true ; shift ;;
+            --help) man ${_env_diff_root}/env-diff.1 ; return 0 ;;
+            -h) _env-diff-short_help ; return 0 ;;
             --) shift ; break ;;
-            *) echo "env-diff: ERROR: unknown argument '$1'" >&2 ; return 1 ;;
+            *) echo "env-diff: ERROR: unknown argument '$1'" >&2;
+               _env-diff-short_help ; return 1 ;;
         esac
     done
 

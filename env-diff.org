@@ -1,0 +1,153 @@
+#+TITLE: env-diff
+
+* NAME
+
+env-diff - determine the effect of a command on the shell environment
+
+* SYNOPSIS
+
+#+begin_src shell
+env-diff [OPTIONS] CMD
+#+end_src
+
+* DESCRIPTION
+
+This command produces the most complete report of what =CMD= changes about
+the current shell environment
+
+- Environment variables
+- Shell variables (unexported)
+- Shell arrays (associative and normal)
+- Shell functions
+- Shell options (set and shopt)
+- Traps (see caveats)
+
+For each section where changes arise, changes are separated into three
+categories: new items, deleted items, and changed items.
+
+For new items, the name and value is printed.  For deleted items, only the
+name is printed.  And for changed items, the values before and after are
+printed except for some special cases.
+
+Special cases include
+- Colon delimited variables like PATH
+- Shell function
+- traps
+
+For each of theses cases, the values before and after are compared in the
+most useful way possible.  Colon delimited lists are compared by showing
+which elments were kept, added, and removed (unless =--list-diff= is given).
+Functions and traps are compared by showing a git-style diff of the values
+before and after.
+
+Also, some shell variables always change.  The variable =$RANDOM= is a
+special variable that asks BASH to give a random number.  Its value changes
+every time it is evaluated.  Variables relating to time like =$EPOCHSECONDS=
+(bash 5) and =$SECONDS= will also always change.
+
+Changes to these variables are not shown in the report unless the
+=--no-ignore= flag is given.
+
+* CONFIGURATION
+
+A configuration file =~/.config/env-diff.yml= stores
+- Variables to ignore: Some variables change in a way that is irrelevant.
+- What variables to process and display as lists
+
+The repository comes with an example file that can be copied.  It can contains
+the toplevel sections:
+
+#+begin_src yaml
+colon_lists:
+  - PATH
+space_lists:
+  - 
+ignored_variables:
+  - BASH_SUBSHELL
+  - RANDOM
+ignored_normal_arrays:
+  - BASH_LINENO
+ignored_assoc_arrays:
+  - BASH_CMDS
+#+end_src
+
+
+
+* OPTIONS
+
+Note: Options must come before =CMD=
+
+** ~--list-diff~
+
+For 'colon list' variables, they will be compared using set comparison which
+ignores doubles, order, and empty elements (caused by leading colon, trailing
+colon, or two consecutive colons).
+
+** ~--no-ignore~
+
+Disables the ignoring of changes to certain special variables.
+
+Some variables are special and change no matter what like =BASHPID= (running
+=CMD= and saving the final state happens in a subshell where =BASHPID= will
+be different).
+
+** ~--keep-tmpdir~
+
+Do not delete the temporary directory used to save states before and after
+=CMD=.  These directories can rise to 10M in size if there are a lot of shell
+functions.  Each function must be saved in its own file to garantee no parsing
+errors.  Although the file may be smaller it has to take one block (usually
+4k) on disc.
+
+** ~--local-tmpdir~
+
+Create temporary directory ininside current working directory.
+
+The temporarry directory is normally created inside =$TMPDIR= (or =/tmp=) if
+=TMPDIR= is not defined.
+
+** ~-F CONFIG_FILE~
+
+Specify an alternate config file.
+
+** ~--help~
+
+Display this manpage and exit
+
+* CAVEATS
+
+** Traps
+
+Because of how traps are inherited by subshells and functions, if =CMD= sets
+traps on =DEBUG= or =RETURN=, these will not be seen unless the shell option
+=extdebug= is set prior to calling =env-diff= (setting it inside =env-diff=
+was tried and does not work).
+
+Some traps that do not get inherited by subshells may appear as deleted.
+
+** Variables and functions
+
+The BASH portion of this tool defines several shell functions and a few shell
+variables.  All functions begin with =_env-diff= and all variables that could
+be detected begin with =_env_diff=.
+
+If =CMD= changes one of these functions or variables, it has the potential to
+interfere with the operations that happen after =CMD= is run.
+
+* DEPENDENCIES
+
+- jq
+- standard UNIX tools (sort, comm, cut, cat, mkdir)
+- python3
+
+Optionally if the python package =pygments= is available, it will be used to
+hightlight the body of new shell functions.
+
+The python package =pyyaml= (=python3 -m pip install [--user] pyyaml=) must be
+installed to read the config file =~/.config/env-diff.yml=.
+
+* AUTHOR
+
+Philippe Carphin
+
+
