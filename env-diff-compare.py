@@ -68,13 +68,19 @@ def get_args():
         else set(['PATH'])
     space_lists = set(config['space_lists']) if 'space_lists' in config \
         else set()
-    ignored_variables = set(config['ignored_variables']) if 'ignored_variables' in config \
-        else set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
-                 'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
-    ignored_normal_arrays = set(config['ignored_normal_arrays']) if 'ignored_normal_arrays' in config \
-        else set(['BASH_LINENO'])
-    ignored_assoc_arrays = set(config['ignored_assoc_arrays']) if 'ignored_assoc_arrays' in config \
-        else set(['BASH_CMDS'])
+
+    if args.no_ignore:
+        ignored_variables = set()
+        ignored_normal_arrays = set()
+        ignored_assoc_arrays = set()
+    else:
+        ignored_variables = set(config['ignored_variables']) if 'ignored_variables' in config \
+            else set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
+                     'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
+        ignored_normal_arrays = set(config['ignored_normal_arrays']) if 'ignored_normal_arrays' in config \
+            else set(['BASH_LINENO'])
+        ignored_assoc_arrays = set(config['ignored_assoc_arrays']) if 'ignored_assoc_arrays' in config \
+            else set(['BASH_CMDS'])
 
     return args
 
