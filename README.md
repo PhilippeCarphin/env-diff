@@ -3,7 +3,7 @@
 ```
 env-diff [options] [--] CMD
 
-Produce a complete summary of what `CMD` has changed in the enivironment.
+Produce a complete summary of what `CMD` has changed in the environment.
 - Environment variables
 - Shell variables
 - Associative arrays
