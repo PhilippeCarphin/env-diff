@@ -4,7 +4,15 @@ import sys
 import difflib
 import re
 import argparse
-import yaml
+
+have_yaml = False
+try:
+    import yaml
+    have_yaml = True
+except:
+    print(f"env-diff: \033[1;33mWARNING\033[0m: The python package 'pyyaml' could not be imported.  It can be installed with `python3 -m pip install [--user] pyyaml`.")
+    pass
+
 try:
     import pygments
     import pygments.formatters
@@ -50,7 +58,7 @@ def get_args():
     p.add_argument("files", nargs=2)
     args = p.parse_args()
 
-    if os.path.isfile(args.config_file):
+    if os.path.isfile(args.config_file) and have_yaml:
         with open(args.config_file) as f:
             config = yaml.safe_load(f)
     else:
