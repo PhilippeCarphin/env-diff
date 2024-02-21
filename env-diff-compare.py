@@ -4,6 +4,7 @@ import sys
 import difflib
 import re
 import argparse
+import yaml
 try:
     import pygments
     import pygments.formatters
@@ -28,18 +29,48 @@ DESCRIPTION = """
     that was already there, it won't show in the report even if PATH was
     modified. 
 """
-
 comparison_functions = {}
 display_functions = {}
-p = argparse.ArgumentParser()
-p.add_argument("--list-diff", action='store_true')
-p.add_argument("--no-ignore", action='store_true')
-p.add_argument("files", nargs=2)
-args = p.parse_args()
-ignored_variables = set() if args.no_ignore else \
-                    set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
-                         'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
-ignored_normal_arrays = set() if args.no_ignore else set(['BASH_LINENO'])
+ignored_variables = set()
+ignored_normal_arrays = set()
+ignored_assoc_arrays = set()
+colon_lists = set()
+space_lists = set()
+def get_args():
+    global ignored_variables
+    global ignored_normal_arrays
+    global ignored_assoc_arrays
+    global colon_lists
+    global space_lists
+
+    p = argparse.ArgumentParser()
+    p.add_argument("--list-diff", action='store_true')
+    p.add_argument("--no-ignore", action='store_true')
+    p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.json"), help="Select alternate config file")
+    p.add_argument("files", nargs=2)
+    args = p.parse_args()
+
+    if os.path.isfile(args.config_file):
+        with open(args.config_file) as f:
+            config = yaml.safe_load(f)
+    else:
+        config = {}
+
+    colon_lists = set(config['colon_lists']) if 'colon_lists' in config \
+        else set(['PATH'])
+    space_lists = set(config['space_lists']) if 'space_lists' in config \
+        else set()
+    ignored_variables = set(config['ignored_variables']) if 'ignored_variables' in config \
+        else set(['BASHPID', 'BASH_SUBSHELL', 'EPOCHREALTIME',
+                 'EPOCHSECONDS', 'RANDOM', 'SRANDOM', 'SECONDS'])
+    ignored_normal_arrays = set(config['ignored_normal_arrays']) if 'ignored_normal_arrays' in config \
+        else set(['BASH_LINENO'])
+    ignored_assoc_arrays = set(config['ignored_assoc_arrays']) if 'ignored_assoc_arrays' in config \
+        else set(['BASH_CMDS'])
+
+    return args
+
+args = get_args()
 
 
 def main():
@@ -132,7 +163,7 @@ def compare_associative_arrays(i: dict,f: dict):
     """
     new = set(f.keys()) - set(i.keys())
     deleted = set(i.keys()) - set(f.keys())
-    common = set(i.keys()).intersection(set(f.keys()))
+    common = set(i.keys()).intersection(set(f.keys())) - ignored_assoc_arrays
     changed = list(sorted(filter(lambda v: i[v] != f[v], common)))
 
     if new or deleted or changed:
@@ -150,7 +181,7 @@ def compare_associative_arrays(i: dict,f: dict):
 
     if changed:
         print('\033[4;33mModified Associative Arrays\033[0m')
-        for var in sorted(filter(lambda v: i[v] != f[v], common)):
+        for var in changed:
             print(f"Initial {var}: {i[var]}")
             print(f"Final   {var}: {f[var]}")
 
@@ -325,20 +356,6 @@ def compare_python_lists(name, initial_list, final_list, show_kept=False):
 
 def setup_function_dictionnaries(display, comparison):
     comparison_functions['BASH_FUNC_[a-zA-Z_.-]*%%'] = compare_exported_bash_func
-    colon_lists = [
-        'SSMUSE_LOADED', 'CDPATH', 'PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH',
-        'CPATH', 'MIC_LD_LIBRARY_PATH', 'INFOPATH', 'OBJC_INCLUDE_PATH', 'NLSPATH',
-        'LIBRARY_PATH', 'SSM_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'C_INCLUDE_PATH',
-        'MANPATH', 'EC_INCLUDE_PATH', 'LIBPATH', 'PYTHONPATH', 'TCL_LIBRARY',
-        'LD_LIB_PATH', 'CRAY_LD_LIBRARY_PATH', 'LOADEDMODULES', '_LMFILES_',
-        'PKG_CONFIG_PATH', 'ACLOCAL_PATH', 'CMAKE_PREFIX_PATH',
-        'EC_CMAKE_MODULE_PATH', 'MODULEPATH', 'BASHOPTS', 'SHELLOPTS'
-    ]
-    space_lists = [
-        'EC_LD_LIBRARY_PATH', 'SSMUSE_PLATFORMS', 'JOBCTL_PBS_CELLS',
-        'ORDENV_PLATFORMS', 'ORDENV_USER_PROFILES',
-        'ORDENV_USER_PROFILE_FILENAMES', 'EC_INCLUDE_PATH'
-    ]
     for n in colon_lists:
         comparison[n] = compare_colon_lists
     for n in space_lists:
