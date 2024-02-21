@@ -29,27 +29,17 @@ any BASH code as an argument (calling a shell function, defining variables or ot
 sourcing a script)
 
 ```
-$ env-diff 'f(){ echo "hello" ; } ; PATH=new-thing/bin:$PATH'
-================= ENVIRONMENT VARIABLES ==========
-New variables
--------------
-X=abc
-Modified variables
-------------------
-PATH (colon-separated list using set comparison)
-    ADDED:
-        new-thing/bin
-================= SHELL VARIABLES ================
-New variables
--------------
-A=xyz
-================= SHELL FUNCTIONS ================
-New functions
--------------
-f(){
-    echo "hello"
-}
+env-diff 'f(){ echo "HELLO" ; }
+    PATH=new-thing/bin:${PATH}
+    A=B
+    set -o pipefail
+    shopt -s extdebug
+    g(){ echo "This is new g" ; }
+    unset HOSTNAME
+    export -n USER'
 ```
+
+![example](example.png)
 
 # Details
 
