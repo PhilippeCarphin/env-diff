@@ -16,7 +16,7 @@ Produce a complete summary of what `CMD` has changed in the enivironment.
 
 # Installing
 
-Clone this repository and source =env-diff-cmd.bash= from the repo in your
+Clone this repository and source `env-diff-cmd.bash` from the repo in your
 `~/.bashrc`.
 
 You can also copy the `dot-config-env-diff.yml` to `$HOME/.config/env-diff.yml`
