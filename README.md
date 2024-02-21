@@ -10,6 +10,7 @@ Produce a complete summary of what `CMD` has changed in the environment.
 - Normal arrays
 - Shell options (shopt and set)
 - Functions
+- Traps
 ```
 
 `CMD` can be any command although running executables will have no effect on the environment so it will be either `source` command or a call to a shell function but it can also be plain shell code.
