@@ -54,7 +54,7 @@ def get_args():
     p = argparse.ArgumentParser()
     p.add_argument("--list-diff", action='store_true')
     p.add_argument("--no-ignore", action='store_true')
-    p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.json"), help="Select alternate config file")
+    p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.yml"), help="Select alternate config file")
     p.add_argument("files", nargs=2)
     args = p.parse_args()
 
