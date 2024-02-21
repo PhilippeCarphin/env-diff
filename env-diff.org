@@ -134,6 +134,61 @@ be detected begin with =_env_diff=.
 If =CMD= changes one of these functions or variables, it has the potential to
 interfere with the operations that happen after =CMD= is run.
 
+* SPECIAL VARIABLES
+
+The following is a list of variables that change automatically.  Most of them
+can be ignored since their change is just a side effect of how =env-diff=
+works (=BASHPID=), always change (=EPOCHREALTIME=, =RANDOM=), or represent
+something that is checked a different way (=BASHOPTS=, =SHELLOPTS=).
+
+** =BASHOPTS=
+
+Colon delimited list containing options set with =shopt=. See also
+=SHELLOPTS=.
+
+** =BASH_ALIASES=
+
+Associative array where keys are alias names and values are alias
+definitions.  Since aliases are not compared separately, this is one of the
+only variables from this list that we don't want to ignore.
+
+** =BASH_CMDS=
+
+Associative array representing the internal hash table maintained by the
+=hash= builtin.  When =PATH= is modified, this table is cleared.
+
+** =BASH_LINENO=
+
+Array variable describing the line numbers where functions on the call stack
+were invoked.  The variable state is saved once before =CMD= and once after
+in two different places so =BASH_LINENO[1]= differs.
+
+** =EPOCHREALTIME=
+
+Seconds since the epoch with microsecond decimal precision.  Probably
+introduced in BASH 5.
+
+** =EPOCHSECONDS=
+
+Seconds since the epoch.
+
+** =RANDOM=
+
+Returns a random number (0-32767) each time it is evaluated.
+
+** =SECONDS=
+
+Returns the seconds since shell invocation.
+
+** =SHELLOPTS=
+
+Colon delimited list of active shell options (the ones set with =set -o= or
+=shopt -o=).
+
+** =SRANDOM=
+
+Returns a 32 bit random number.
+
 * DEPENDENCIES
 
 - jq
