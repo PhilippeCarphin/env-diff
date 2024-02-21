@@ -318,39 +318,3 @@ _env-diff-traps_to_json(){
                          ({}; . + {($a[2*$i]): ($a[2*$i + 1])})'
 }
 
-################################################################################
-# Run a simple test to manually confirm that most parts are working
-################################################################################
-_env-diff-test(){
-    g(){
-        echo "This is G"
-    }
-    echo "------------------ TEST 1"
-    env-diff 'A=B;
-    export X=Y;
-    unset USER;
-    f(){ echo "hello" ; };
-    g(){ echo "This is new G" ; };
-    declare -A assoc; assoc[y]=v;
-    BASH_ALIASES[booggers]=balls;
-    PATH=BANANNA:${PATH}:APPLE:;
-    shopt -so errexit;
-    shopt -u sourcepath;'
-    echo "------------------ TEST 2"
-    env-diff 'PATH=${PATH}:'
-    echo "------------------ TEST 3"
-    env-diff --list-diff 'PATH=${PATH}:'
-    echo "------------------ TEST 4"
-    env-diff -F ${_env_diff_root}/dot-config-env-diff.yml 'A=B;
-    export X=Y;
-    unset USER;
-    f(){ echo "hello" ; };
-    g(){ echo "This is new G" ; };
-    declare -A assoc; assoc[y]=v;
-    BASH_ALIASES[booggers]=balls;
-    PATH=BANANNA:${PATH}:APPLE:;
-    shopt -so errexit;
-    shopt -u sourcepath;'
-}
-if [[ "$1" != "" ]] ; then _env-diff-test ; fi
-
