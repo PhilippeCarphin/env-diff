@@ -59,7 +59,7 @@ env-diff(){
 
     local _env_diff_tmpdir
     if ${_env_diff_local_tmpdir} ; then
-        _env_diff_tmpdir=$(mktemp -d tmp.XXXXXX) || return 1
+        _env_diff_tmpdir=$(mktemp -d env-diff-tmp.XXXXXX) || return 1
     else
         _env_diff_tmpdir=$(mktemp -d) || return 1
     fi
