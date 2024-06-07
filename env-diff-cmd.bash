@@ -34,35 +34,19 @@ env-diff(){
     local -a _env_diff_compare_args=()
     local _env_diff_keep_tmpdir=false
     local _env_diff_local_tmpdir=false
-    local _env_diff_python3
-    local _env_diff_sort
-    local _env_diff_comm
-    local _env_diff_jq
-    local _env_diff_cut
-    local _env_diff_cat
-    local _env_diff_mkdir
 
-    # We are saving paths to all programs because the command we are trying
-    # may mess some things up.  The use of jq, python3, ... in the second
-    # call to _env-diff_save_all_info would not be found.
-    for _env_diff_shell_var in _env_diff_python3 _env_diff_sort _env_diff_comm _env_diff_jq _env_diff_cut _env_diff_cat _env_diff_mkdir ; do
-        eval $_env_diff_shell_var=$(which ${_env_diff_shell_var##_env_diff_} 2>/dev/null)
-        if [[ ${!_env_diff_shell_var} == "" ]] ; then
-            echo "env-diff: ERROR: Program ${_env_diff_shell_var##_env_diff_} not found in PATH : required for operation" >&2
-            return 1
-        fi
-    done
+    local _env_diff_python3=""
+    local _env_diff_sort=""
+    local _env_diff_comm=""
+    local _env_diff_jq=""
+    local _env_diff_cut=""
+    local _env_diff_cat=""
+    local _env_diff_mkdir=""
+    local _env_diff_jq_length_str=""
 
-    local _env_diff_jq_length_str=$(
-        jq_version=$(${_env_diff_jq} --version)
-        minor_patch=${jq_version##*.}
-        minor=${minor_patch%%.*}
-        if (( ${minor} < 7 )) ; then
-            echo "(length-0.5)"
-        else
-            echo "(length-1)"
-        fi
-    )
+    if ! _env-diff-setup ; then
+        return 1;
+    fi
 
     while [[ "$1" == -* ]] ; do
         case "$1" in
@@ -143,6 +127,81 @@ _env-diff-internal(){
         echo "env-diff: ERROR: in python comparison script" >&2
         return 1
     fi
+}
+
+env-diff-compare(){
+    python3 ${_env_diff_root}/env-diff-compare.py "$@"
+}
+
+_env-diff-setup(){
+    # We are saving paths to all programs because the command we are trying
+    # may mess some things up.  The use of jq, python3, ... in the second
+    # call to _env-diff_save_all_info would not be found.
+    local -n nameref
+    for nameref in _env_diff_python3 _env_diff_sort _env_diff_comm _env_diff_jq _env_diff_cut _env_diff_cat _env_diff_mkdir ; do
+        local program=${!nameref##_env_diff_}
+        if ! [[ -v ${!nameref} ]] ; then
+            echo "env-diff: INTERNAL ERROR: The variable '${!nameref}' must be declared in the calling scope" >&2
+            return 1
+        fi
+
+        if ! nameref=$(which ${program} 2>/dev/null) ; then
+            echo "env-diff: ERROR: Program ${program} not found in PATH : required for operation" >&2
+            return 1
+        fi
+    done
+
+    if ! [[ -v _env_diff_jq_length_str ]] ; then
+        echo "env-diff: INTERNAL ERROR: The variable '_env_diff_jq_length_str' must be declared in the calling scope" >&2
+        return 1
+    fi
+    _env_diff_jq_length_str=$(
+        jq_version=$(${_env_diff_jq} --version)
+        minor_patch=${jq_version##*.}
+        minor=${minor_patch%%.*}
+        if (( ${minor} < 7 )) ; then
+            echo "(length-0.5)"
+        else
+            echo "(length-1)"
+        fi
+    )
+}
+
+env-diff-save(){
+    # Declarations must be followed by `=""` so that the test '[[ -v .... ]]'
+    # will say that it the variable is declared
+    local _env_diff_python3=""
+    local _env_diff_sort=""
+    local _env_diff_comm=""
+    local _env_diff_jq=""
+    local _env_diff_cut=""
+    local _env_diff_cat=""
+    local _env_diff_mkdir=""
+    local _env_diff_jq_length_str=""
+
+    if ! _env-diff-setup ; then
+        return 1
+    fi
+
+    if [[ "$1" == -h ]] || [[ "$1" == --help ]] ; then
+        echo "${FUNCNAME[0]} DIR"
+        echo ""
+        echo "Save all info for use by env-diff-compare"
+    fi
+
+    if (( $# != 1 )) ; then
+        echo "This function takes exactly one argument" >&2
+        return 1
+    fi
+
+    if [[ -e "$1" ]] ; then
+        echo "Cannot create save directory: already exists"
+        return 1
+    fi
+
+    mkdir "$1"
+
+    _env-diff-save_all_info "$1"
 }
 
 ################################################################################
