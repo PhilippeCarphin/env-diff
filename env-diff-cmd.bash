@@ -187,19 +187,24 @@ env-diff-save(){
         echo "${FUNCNAME[0]} DIR"
         echo ""
         echo "Save all info for use by env-diff-compare"
+        return 0
     fi
 
     if (( $# != 1 )) ; then
-        echo "This function takes exactly one argument" >&2
+        ${FUNCNAME[0]} -h
+        echo "${FUNCNAME[0]}: ERROR: This function takes exactly one argument" >&2
         return 1
     fi
 
     if [[ -e "$1" ]] ; then
-        echo "Cannot create save directory: already exists"
+        echo "${FUNCNAME[0]}: ERROR: Cannot create save directory: already exists"
         return 1
     fi
 
-    mkdir "$1"
+    if ! mkdir "$1" ; then
+        echo "${FUNCNAME[0]}: ERROR: Could not create directory '$1'" >&2
+        return 1
+    fi
 
     _env-diff-save_all_info "$1"
 }
