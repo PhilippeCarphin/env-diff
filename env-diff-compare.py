@@ -55,6 +55,7 @@ def get_args():
     p.add_argument("--list-diff", action='store_true')
     p.add_argument("--no-ignore", action='store_true')
     p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.yml"), help="Select alternate config file")
+    p.add_argument("--show-function-bodies", action='store_true', help="Show bodies of new functions")
     p.add_argument("files", nargs=2)
     args = p.parse_args()
 
@@ -80,7 +81,7 @@ def get_args():
         ignored_normal_arrays = set(config['ignored_normal_arrays']) if 'ignored_normal_arrays' in config \
             else set(['BASH_LINENO'])
         ignored_assoc_arrays = set(config['ignored_assoc_arrays']) if 'ignored_assoc_arrays' in config \
-            else set(['BASH_CMDS'])
+            else set()
 
     return args
 
@@ -100,7 +101,7 @@ def main():
     compare_normal_arrays(before.normal_arrays, after.normal_arrays)
     compare_shell_options(before.shopt, after.shopt, from_set=False)
     compare_shell_options(before.shopt_set, after.shopt_set, from_set=True)
-    compare_shell_functions(before.functions, after.functions, True)
+    compare_shell_functions(before.functions, after.functions, args.show_function_bodies)
     compare_traps(before.traps, after.traps)
 
 class ShellEnvironmentData:
@@ -108,32 +109,36 @@ class ShellEnvironmentData:
     Class ShellEnvironmentData holds the all the data saved into the temp files
     """
     def __init__(self, data_dir):
-        with open(os.path.join(data_dir, f"env_vars.json")) as f:
-            self.env_vars = json.load(f)
-        with open(os.path.join(data_dir, f"shell_vars.json")) as f:
-            self.shell_vars = json.load(f)
-        with open(os.path.join(data_dir, f"assoc_arrays.json")) as f:
-            self.assoc_arrays = json.load(f)
-        with open(os.path.join(data_dir, f"normal_arrays.json")) as f:
-            self.normal_arrays = json.load(f)
-        self.shopt = {}
-        with open(os.path.join(data_dir, f"shopt.txt")) as f:
-            for line in f:
-                opt, val = line.split()
-                self.shopt[opt] = val
-        self.functions = {}
-        self.shopt_set = {}
-        with open(os.path.join(data_dir, f"shopt_set.txt")) as f:
-            for line in f:
-                opt, val = line.split()
-                self.shopt_set[opt] = val
-        with open(os.path.join(data_dir, f"func_names.txt")) as f:
-            for name in f.read().splitlines():
-                with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash")) as func:
-                    lines = func.read().splitlines()[2:]
-                    self.functions[name] = lines
-        with open(os.path.join(data_dir, f"traps.json")) as f:
-            self.traps = json.load(f)
+        try:
+            with open(os.path.join(data_dir, f"env_vars.json")) as f:
+                self.env_vars = json.load(f)
+            with open(os.path.join(data_dir, f"shell_vars.json")) as f:
+                self.shell_vars = json.load(f)
+            with open(os.path.join(data_dir, f"assoc_arrays.json")) as f:
+                self.assoc_arrays = json.load(f)
+            with open(os.path.join(data_dir, f"normal_arrays.json")) as f:
+                self.normal_arrays = json.load(f)
+            self.shopt = {}
+            with open(os.path.join(data_dir, f"shopt.txt")) as f:
+                for line in f:
+                    opt, val = line.split()
+                    self.shopt[opt] = val
+            self.functions = {}
+            self.shopt_set = {}
+            with open(os.path.join(data_dir, f"shopt_set.txt")) as f:
+                for line in f:
+                    opt, val = line.split()
+                    self.shopt_set[opt] = val
+            with open(os.path.join(data_dir, f"func_names.txt")) as f:
+                for name in f.read().splitlines():
+                    with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash")) as func:
+                        lines = func.read().splitlines()[2:]
+                        self.functions[name] = lines
+            with open(os.path.join(data_dir, f"traps.json")) as f:
+                self.traps = json.load(f)
+        except FileNotFoundError as e:
+            print(f"Could not locate required file in directory '{data_dir}': {e}")
+            raise
 
 def compare_variables(i: dict,f: dict, env):
     """
@@ -196,8 +201,35 @@ def compare_associative_arrays(i: dict,f: dict):
     if changed:
         print('\033[4;33mModified Associative Arrays\033[0m')
         for var in changed:
-            print(f"Initial {var}: {i[var]}")
-            print(f"Final   {var}: {f[var]}")
+            compare_single_associative_array(var, i[var], f[var])
+
+def compare_single_associative_array(name: str, i: dict, f:dict):
+    print(f"\033[33m  {name}\033[0m")
+    initial_keys = set(i.keys())
+    final_keys = set(f.keys())
+
+    new = final_keys - initial_keys
+    deleted = initial_keys - final_keys
+    common = initial_keys.intersection(final_keys)
+    changed = list(sorted(filter(lambda v: i[v] != f[v], common)))
+    if new:
+        print(f"\033[33m    New keys\033[0m")
+        for k in new:
+            print(f"      {k}: {f[k]}")
+
+    if deleted:
+        print(f"\033[33m    Deleted keys\033[0m")
+        for k in deleted:
+            print(f"      {k}: (value was {i[k]})")
+
+    if changed:
+        print(f"\033[33m    Keys with changed values\033[0m")
+        for k in changed:
+            print(f"      {k}:")
+            print(f"        OLD: {i[k]}")
+            print(f"        NEW: {f[k]}")
+
+
 
 def compare_normal_arrays(i: dict, f:dict):
     """
@@ -223,7 +255,7 @@ def compare_normal_arrays(i: dict, f:dict):
     if deleted:
         print('\033[4;31mDeleted Normal Arrays\033[0m')
         for var in sorted(deleted):
-            print(f"{var}: {f[var]}")
+            print(f"{var}: {i[var]}")
 
     if changed:
         print('\033[4;33mModified Normal Arrays\033[0m')
@@ -273,13 +305,14 @@ def compare_shell_functions(i: dict, f: dict, show_new_defs=True):
     if deleted:
         print('\033[4;31mDeleted functions\033[0m')
         for func in sorted(deleted):
-            print(f"{func}()\n")
+            print(f"{func}()")
 
     if changed:
         print('\033[4;33mModified functions\033[0m')
         for func in changed:
             print(f"\033[1;35m{func}()\033[0m")
-            diff_compare(i[func], f[func])
+            if show_new_defs:
+                diff_compare(i[func], f[func])
 
 
 def compare_traps(i: dict, f: dict):
@@ -317,19 +350,40 @@ def display_single_variable(name, value):
     for k in display_functions:
         if re.fullmatch(k, name):
             display_func = display_functions[k]
+            break
     else:
-        display_func = lambda n,v: print(f"{n}={v}")
+        display_func = lambda n,v: print(f"\033[1m{n}\033[0m={v}")
     display_func(name, value)
 
 def compare_colon_lists(name, initial_value, final_value):
     initial_list = initial_value.split(':')
     final_list = final_value.split(':')
+    print(f"{name} (colon-separated list", end='')
     return compare_python_lists(name, initial_list, final_list)
+
+def display_colon_list(name, value):
+    elements = value.split(':')
+    print(f"\033[1m{name}\033[0m (colon delimited list)")
+    return display_python_list(name, elements)
 
 def compare_space_lists(name, initial_value, final_value):
     initial_list = initial_value.split(' ')
     final_list = final_value.split(' ')
+    print(f"{name} (space-separated list", end='')
     return compare_python_lists(name, initial_list, final_list)
+
+def display_space_list(name, value):
+    elements = value.split( )
+    print(f"\033[1m{name}\033[0m (space delimited list)")
+    return display_python_list(name, elements)
+
+def display_python_list(name, elements):
+    for e in elements:
+        if e:
+            print(f'    {e}')
+        else:
+            print('    \033[4m(empty)\033[0m (leading, trailing, or consecutive delimiters)')
+
 
 def color_full_diff(before, after):
     diff_colors = {'+': '\033[32m', ' ': '', '-': '\033[31m', '?': '\033[36m'}
@@ -347,13 +401,13 @@ def compare_python_lists(name, initial_list, final_list, show_kept=False):
     common = set(initial_list).intersection(set(final_list))
     indent = '        '
     if args.list_diff:
-        print(name)
+        print(')')
         print('    ' + '\n    '.join(map(str.rstrip, list(color_full_diff(
                 [ s if s else "(empty)" for s in initial_list ],
                 [ s if s else "(empty)" for s in final_list ]
         )))))
     else:
-        print(f"{name} (colon-separated list using set comparison)")
+        print(' using set comparison)')
         if new:
             print('    ADDED:')
             print('\n'.join([f'{indent}{e}' for e in new]))
@@ -372,8 +426,10 @@ def setup_function_dictionnaries(display, comparison):
     comparison_functions['BASH_FUNC_[a-zA-Z_.-]*%%'] = compare_exported_bash_func
     for n in colon_lists:
         comparison[n] = compare_colon_lists
+        display[n] = display_colon_list
     for n in space_lists:
         comparison[n] = compare_space_lists
+        display[n] = display_space_list
 
 def compare_exported_bash_func(name, before, after):
     print(name)
@@ -416,4 +472,8 @@ else:
         return code
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except FileNotFoundError as e:
+        sys.exit(1)
+        pass

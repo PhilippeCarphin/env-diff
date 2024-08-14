@@ -15,13 +15,14 @@ _env-diff-short_help(){
 		    functions, shell options and traps.
 
 		OPTIONS
-		    --list-diff      Use diff for list comparison
-		    --no-ignore      Bypass ignoring of variables
-		    -F CONFIG FILE   Use alternate config file
-		    --keep-tmpdir    Do not delete temp dir after running
-		    --local-tmpdir   Create temp dir in PWD
-		    --help           Display manpage for env-diff
-		    -h               Display this help text and exit
+		    --list-diff             Use diff for list comparison
+		    --no-ignore             Bypass ignoring of variables
+		    -F CONFIG FILE          Use alternate config file
+		    --keep-tmpdir           Do not delete temp dir after running
+		    --local-tmpdir          Create temp dir in PWD
+		    --help                  Display manpage for env-diff
+		    --show-function-bodies  Show code of modified/added functions
+		    -h                      Display this help text and exit
 	EOF
 }
 
@@ -56,6 +57,7 @@ env-diff(){
             --keep-tmpdir) _env_diff_keep_tmpdir=true ; shift ;;
             --local-tmpdir) _env_diff_local_tmpdir=true ; shift ;;
             --help) man ${_env_diff_root}/env-diff.1 ; return 0 ;;
+            --show-function-bodies) _env_diff_compare_args+=(--show-function-bodies) ; shift ;;
             -h) _env-diff-short_help ; return 0 ;;
             --) shift ; break ;;
             *) echo "env-diff: ERROR: unknown argument '$1'" >&2;
@@ -303,6 +305,14 @@ _env-diff-assoc_arrays_to_json(){
                         | . as $a
                         | reduce range(0;(length/2)-0.5) as $i
                         ({}; . + {($a[2*$i]): ($a[2*$i + 1])})'
+        # The lenght/2 - 0.5 does what I want for any version of JQ.  For 1.7+
+        # the length will be say 7 for an assoc array with 3 key-value pairs
+        # and 7/2 - 0.5 will be 3 so $i will do 0,1,2.
+        # And for jq 1.6-, the length will be 6 and 6/2 - 0.5 will be 2.5 and
+        # because of how it works in JQ, because 2.5 is greater than 2, the
+        # index 2 will be included in the iteration so $i will also do 0,1,2.
+        # I'm not sure how JQ works, but this is how I make sense of why
+        # (length/2)-0.5 works for both versions.
         first=false
     done
     printf "}"
@@ -358,6 +368,9 @@ _env-diff-traps_to_json(){
         done
 
         # Traps for the signals from signal.h
+        # We could use `for t in $(trap -l | sed 's/) [^ \t]*/\n/g') ; do...`
+        # but assuming there are no gaps in signal numbers, just going until
+        # trap returns non-zero is simple
         local n=1
         while true ; do
             if ! t="$(trap -p ${n} 2>/dev/null)"; then
@@ -382,3 +395,4 @@ _env-diff-traps_to_json(){
                          ({}; . + {($a[2*$i]): ($a[2*$i + 1])})'
 }
 
+source ${_env_diff_root}/env-diff-completion.bash

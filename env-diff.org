@@ -83,6 +83,17 @@ For 'colon list' variables, they will be compared using set comparison which
 ignores doubles, order, and empty elements (caused by leading colon, trailing
 colon, or two consecutive colons).
 
+** ~--show-function-bodies~
+
+For added functions, show the entire body of the function.
+
+For modified functions, show an inline diff (like =git diff=) between the
+initial and final versions of the function.
+
+The function's code is obtained using the =type= bash builtin.  It may have
+minor differences between the actual code in the file where the function is
+defined.
+
 ** ~--no-ignore~
 
 Disables the ignoring of changes to certain special variables.
