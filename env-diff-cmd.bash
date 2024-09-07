@@ -159,7 +159,7 @@ _env-diff-setup(){
     fi
     _env_diff_jq_length_str=$(
         jq_version=$(${_env_diff_jq} --version)
-        minor_patch=${jq_version##*.}
+        minor_patch=${jq_version#*.}
         minor=${minor_patch%%.*}
         if (( ${minor} < 7 )) ; then
             echo "(length-0.5)"
