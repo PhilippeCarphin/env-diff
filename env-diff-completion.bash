@@ -46,9 +46,6 @@ _env_diff_is_arg_option(){
 }
 
 _env_diff(){
-    declare -p COMP_WORDS >> ~/.log.txt
-    echo "COMP_CWORD=${COMP_CWORD}" >> ~/.log.txt
-    echo "#COMP_WORDS=${#COMP_WORDS[@]}" >> ~/.log.txt
     local cur prev words cword
     _init_completion || return
 
@@ -72,7 +69,6 @@ _env_diff(){
             # not an option and not the argument to an option
             # we are writing the COMMAND argument and completion should stop
             compopt -o default
-            echo "i=${i}, ${words[*]:i}" >> ~/.log.txt
             return
         fi
     done
