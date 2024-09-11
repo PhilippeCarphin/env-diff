@@ -418,9 +418,11 @@ def compare_python_lists(name, initial_list, final_list, show_kept=False):
             print('    REMOVED:')
             print('\n'.join([f'{indent}{e}' for e in deleted]))
         if initial_list != final_list and (initial_set == final_set):
-            print(f'    (Before and after are different as lists but not as sets)')
-            print(f'    (It could be that adding an element that was already there,)')
-            print(f'    (or removing doubles, reordering, or adding separators)')
+            print('(before and after are the same as sets.  Comparing with diff')
+            print('    ' + '\n    '.join(map(str.rstrip, list(color_full_diff(
+                    [ s if s else "(empty)" for s in initial_list ],
+                    [ s if s else "(empty)" for s in final_list ]
+            )))))
 
 def setup_function_dictionnaries(display, comparison):
     comparison_functions['BASH_FUNC_[a-zA-Z_.-]*%%'] = compare_exported_bash_func
