@@ -145,6 +145,26 @@ be detected begin with =_env_diff=.
 If =CMD= changes one of these functions or variables, it has the potential to
 interfere with the operations that happen after =CMD= is run.
 
+** Arrays
+
+Array differences are always detected.  In the case of sparse arrays like the
+array =sparse= constructed below, the output will be in a format similar to
+that of =declare -p=.
+#+begin_src
+$ sparse=(a b c)
+$ sparse[100]=d
+$ contiguous=(a b c d) 
+$ declare -p sparse
+declare -a sparse=([0]="a" [1]="b" [2]="c" [100]="d")
+$ declare -p contiguous
+declare -a contiguous=([0]="a" [1]="b" [2]="c" [3]="d")
+#+end_src
+
+That way, if an array changes from the value of =sparse= to the value of
+=contiguous=, the difference will be shown.
+
+Arrays that are contiguous are shown in the format of python lists.
+
 * SPECIAL VARIABLES
 
 The following is a list of variables that change automatically.  Most of them

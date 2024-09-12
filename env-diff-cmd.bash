@@ -240,7 +240,7 @@ _env-diff-save_all_info(){
     ${_env_diff_python3} -c "import os,json ; print(json.dumps(dict(os.environ)))" >$1/env_vars.json || return 1
     <$1/shell_vars.txt _env-diff-shell_vars_to_json > $1/shell_vars.json || return 1
     <$1/assoc_arrays.txt _env-diff-assoc_arrays_to_json > $1/assoc_arrays.json || return 1
-    <$1/normal_arrays.txt _env-diff-normal_arrays_to_json > $1/normal_arrays.json || return 1
+    <$1/normal_arrays.txt _env-diff-assoc_arrays_to_json > $1/normal_arrays.json || return 1
 
     # Save all functions to individual files
     ${_env_diff_mkdir} "$1/functions" || return 1

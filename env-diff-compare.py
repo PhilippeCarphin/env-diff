@@ -260,8 +260,15 @@ def compare_normal_arrays(i: dict, f:dict):
     if changed:
         print('\033[4;33mModified Normal Arrays\033[0m')
         for var in changed:
-            print(f"Initial {var}: {i[var]}")
-            print(f"Final   {var}: {f[var]}")
+            initial = { int(k):v for k,v in i[var].items() }
+            final = { int(k):v for k,v in f[var].items() }
+            if not is_contiguous_array(initial) or not is_contiguous_array(final):
+                print(f"Initial {var}: {as_sparse_array(initial)}")
+                print(f"Final   {var}: {as_sparse_array(final)}")
+            else:
+                print(f"Initial {var}: {as_normal_array(initial)}")
+                print(f"Final   {var}: {as_normal_array(final)}")
+
 
 def compare_shell_options(i: dict, f: dict, from_set=False):
     """
@@ -472,6 +479,24 @@ if 'pygments' in sys.modules:
 else:
     def highlight(code):
         return code
+
+""" Functions operating on dictionaries with integer keys """
+def is_contiguous_array(d):
+    """ Check if the bash array represented by d has contiguous indices"""
+    keys=d.keys()
+    for i in range(len(keys)):
+        if i not in keys:
+            return False
+    return True
+
+def as_normal_array(d):
+    """ For contiguous arrays, we reprensent it as a regular python list """
+    return [v for k,v in sorted(d.items())]
+
+def as_sparse_array(d):
+    """ For sparse arrays, we represent them as a string resembling the output
+    of the bash builtin `delcare -p` """
+    return '(' + ' '.join([f"[{k}]='{v}'" for k,v in sorted(d.items())]) + ')'
 
 if __name__ == "__main__":
     try:
