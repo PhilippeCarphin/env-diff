@@ -4,6 +4,22 @@
 env-diff [options] [--] CMD
 
 Produce a complete summary of what `CMD` has changed in the environment.
+```
+
+```
+env-diff-save DIRECTORY
+
+Create a directory DIRECTORY containing all the information about the current
+shell environment.
+```
+
+```
+env-diff-compare [options] BEFORE AFTER
+
+Compare directories created with env-diff-save.
+```
+
+All commands save and compare these aspects of the shell environment:
 - Environment variables
 - Shell variables
 - Associative arrays
@@ -11,9 +27,10 @@ Produce a complete summary of what `CMD` has changed in the environment.
 - Shell options (shopt and set)
 - Functions
 - Traps
-```
 
-`CMD` can be any command although running executables will have no effect on the environment so it will be either `source` command or a call to a shell function but it can also be plain shell code.
+`CMD` can be any command although running executables will have no effect on
+the environment so it will be either `source` command or a call to a shell
+function but it can also be plain shell code.
 
 # Installing
 

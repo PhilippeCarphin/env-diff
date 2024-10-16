@@ -188,7 +188,8 @@ env-diff-save(){
     if [[ "$1" == -h ]] || [[ "$1" == --help ]] ; then
         echo "${FUNCNAME[0]} DIR"
         echo ""
-        echo "Save all info for use by env-diff-compare"
+        echo "Save all info for use by env-diff-compare."
+        echo "Run \`env-diff --help\` for more information"
         return 0
     fi
 

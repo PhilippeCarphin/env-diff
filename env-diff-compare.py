@@ -36,6 +36,8 @@ DESCRIPTION = """
     removed.  This has the drawback that if we modify PATH by adding something
     that was already there, it won't show in the report even if PATH was
     modified. 
+
+    Run `env-diff --help` for more information.
 """
 comparison_functions = {}
 display_functions = {}
