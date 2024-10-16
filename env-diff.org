@@ -223,7 +223,7 @@ Returns a 32 bit random number.
 * DEPENDENCIES
 
 - jq
-- standard UNIX tools (sort, comm, cut, cat, mkdir)
+- standard UNIX tools (sort, comm, cut, cat, mkdir, mktemp)
 - python3
 
 Optionally if the python package =pygments= is available, it will be used to
