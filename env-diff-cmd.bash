@@ -142,7 +142,10 @@ _env-diff-setup(){
     local -n nameref
     for nameref in _env_diff_python3 _env_diff_sort _env_diff_comm _env_diff_jq _env_diff_cut _env_diff_cat _env_diff_mkdir ; do
         local program=${!nameref##_env_diff_}
-        if ! [[ -v ${!nameref} ]] ; then
+        # Check if variable exists regardless of it being empty or non-empty.
+        # Note: bash 3 (the version that comes with MacOS) does not have [[ -v
+        # VARNAME ]] so we have to do it with declare.
+        if ! declare -p ${!nameref} >/dev/null 2>&1 ; then
             echo "env-diff: INTERNAL ERROR: The variable '${!nameref}' must be declared in the calling scope" >&2
             return 1
         fi
