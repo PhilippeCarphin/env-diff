@@ -129,12 +129,38 @@ Display this manpage and exit
 
 ** Traps
 
-Because of how traps are inherited by subshells and functions, if =CMD= sets
-traps on =DEBUG= or =RETURN=, these will not be seen unless the shell option
-=extdebug= is set prior to calling =env-diff= (setting it inside =env-diff=
-was tried and does not work).
+The traps on =ERR=, =EXIT=, =DEBUG=, =RETURN= are special.  Here is some
+information.
 
-Some traps that do not get inherited by subshells may appear as deleted.
+Since =env-diff CMD= runs =CMD= in a subshell, interaction between traps and
+subshells may cause incorrect results.  However with =env-diff-save=, there
+are no subshells.  If you suspect subshells are causing incorrect results, then
+#+begin_src
+env-diff-save before
+<manipulate traps>
+env-diff-save after
+env-diff-compare before after
+#+end_src
+will produce more reliable results.
+
+*** =EXIT=
+
+=env-diff 'trap "echo hello" X'= incorrectly reports the =EXIT= trap as
+for every =X= other than =EXIT=.
+
+However =env-diff 'trap "echo exit" EXIT'= will show the correct result.
+
+*** =ERR=
+
+This trap is not inherited by function unless =set -E= (=set -o errtrace=) is
+activated.  Without =set -E= the code that inspects the traps will not see
+it.
+
+*** =DEBUG=, =RETURN=
+
+These traps are not inherited by functions and subshells unless =shopt -s
+extdebug= is used.
+
 
 ** Variables and functions
 

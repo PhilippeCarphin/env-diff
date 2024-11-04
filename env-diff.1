@@ -152,13 +152,44 @@ Display this manpage and exit
 .SH CAVEATS
 .SS Traps
 .PP
-Because of how traps are inherited by subshells and functions, if
-\f[V]CMD\f[R] sets traps on \f[V]DEBUG\f[R] or \f[V]RETURN\f[R], these
-will not be seen unless the shell option \f[V]extdebug\f[R] is set prior
-to calling \f[V]env-diff\f[R] (setting it inside \f[V]env-diff\f[R] was
-tried and does not work).
+The traps on \f[V]ERR\f[R], \f[V]EXIT\f[R], \f[V]DEBUG\f[R],
+\f[V]RETURN\f[R] are special.
+Here is some information.
 .PP
-Some traps that do not get inherited by subshells may appear as deleted.
+Since \f[V]env-diff CMD\f[R] runs \f[V]CMD\f[R] in a subshell,
+interaction between traps and subshells may cause incorrect results.
+However with \f[V]env-diff-save\f[R], there are no subshells.
+If you suspect subshells are causing incorrect results, then
+.IP
+.nf
+\f[C]
+env-diff-save before
+<manipulate traps>
+env-diff-save after
+env-diff-compare before after
+\f[R]
+.fi
+.PP
+will produce more reliable results.
+.SS \f[V]EXIT\f[R]
+.PP
+\f[V]env-diff \[aq]trap \[dq]echo hello\[dq] X\[aq]\f[R] incorrectly
+reports the \f[V]EXIT\f[R] trap as for every \f[V]X\f[R] other than
+\f[V]EXIT\f[R].
+.PP
+However \f[V]env-diff \[aq]trap \[dq]echo exit\[dq] EXIT\[aq]\f[R] will
+show the correct result.
+.SS \f[V]ERR\f[R]
+.PP
+This trap is not inherited by function unless \f[V]set -E\f[R]
+(\f[V]set -o errtrace\f[R]) is activated.
+Without \f[V]set -E\f[R] the code that inspects the traps will not see
+it.
+.SS \f[V]DEBUG\f[R], \f[V]RETURN\f[R]
+.PP
+These traps are not inherited by functions and subshells unless
+\f[V]shopt -s
+extdebug\f[R] is used.
 .SS Variables and functions
 .PP
 The BASH portion of this tool defines several shell functions and a few
