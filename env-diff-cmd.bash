@@ -99,8 +99,7 @@ _env-diff-internal(){
 
         echo "env-diff: INFO: Running command '$*'" >&2
         if ! eval "$@" ; then
-            echo "env-diff: INFO: Command '$*' failed" >&2
-            return 1
+            printf "env-diff: INFO: Command '$*' failed\n" >&2
         fi
 
         ${_env_diff_mkdir} -p ${_env_diff_tmpdir}/after || return 1
