@@ -132,7 +132,7 @@ the `FINAL` we had created earlier.
 
 # Details
 
-[env-diff manpage](env-diff.org)
-[env-diff-save manpage](env-diff-save.org)
-[env-diff-gencode manpage](env-diff-gencode.org)
-[env-diff-load manpage](env-diff-load.org)
+- [env-diff manpage](env-diff.org)
+- [env-diff-save manpage](env-diff-save.org)
+- [env-diff-gencode manpage](env-diff-gencode.org)
+- [env-diff-load manpage](env-diff-load.org)
