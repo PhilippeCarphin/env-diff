@@ -31,6 +31,8 @@ env-diff-load [options] DIRECTORY
 Load the environment from DIRECTORY created with env-diff-save
 ```
 
+Run `CMD --help` to see the manpage for each command
+
 All commands save and compare these aspects of the shell environment:
 - Environment variables
 - Shell variables
@@ -54,11 +56,13 @@ or make your own using the file as a template.
 
 # Usage
 
+## Basic usage
+
 Sourcing `env-diff-cmd.bash` defines the `env-diff()` shell function which can receive
 any BASH code as an argument (calling a shell function, defining variables or other stuff,
 sourcing a script)
 
-```
+```sh
 env-diff 'f(){ echo "HELLO" ; }
     PATH=new-thing/bin:${PATH}
     A=B
@@ -70,6 +74,61 @@ env-diff 'f(){ echo "HELLO" ; }
 ```
 
 ![example](example.png)
+
+## Saving environments to compare
+
+This will show the same output as above but may be more convenient to compare
+environments from different shells.
+
+```sh
+env-diff-save INITIAL
+
+# Change things about our shell environment
+f(){ echo "HELLO" ; }
+PATH=new-thing/bin:${PATH}
+A=B
+set -o pipefail
+shopt -s extdebug
+g(){ echo "This is new g" ; }
+unset HOSTNAME
+export -n USER
+
+env-diff-save FINAL
+
+env-diff-compare INITIAL FINAL
+```
+
+## Loading a saved environment
+
+The command `env-diff-gencode INITIAL FINAL` will procuce shell code to go
+from `INITIAL` to `FINAL`:
+
+```sh
+env-diff-save INITIAL
+
+# Change things about our shell environment
+f(){ echo "HELLO" ; }
+PATH=new-thing/bin:${PATH}
+A=B
+set -o pipefail
+shopt -s extdebug
+g(){ echo "This is new g" ; }
+unset HOSTNAME
+export -n USER
+
+env-diff-save FINAL
+
+env-diff-gencode INITIAL FINAL > to_source
+```
+
+Now in a new shell, we can do
+```sh
+source to_source
+env-diff-save NEW_FINAL
+env-diff-compare FINAL NEW_FINAL
+```
+and see that sourcing the file made our environment `NEW_FINAL` identical to
+the `FINAL` we had created earlier.
 
 # Details
 
