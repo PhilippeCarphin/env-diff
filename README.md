@@ -130,6 +130,18 @@ env-diff-compare FINAL NEW_FINAL
 and see that sourcing the file made our environment `NEW_FINAL` identical to
 the `FINAL` we had created earlier.
 
+### Convenience function
+
+The `env-diff-load TO_LOAD` command is a convenience function that combines
+the steps above to generate and evaluate code to go from the current shell
+environment to the one saved in `TO_LOAD`.  It is roughly equivalent to
+```sh
+env-diff-load(){
+    env-diff-save current
+    eval "$(env-diff-gencode current $1)"
+}
+```
+
 # Details
 
 - [env-diff manpage](env-diff.org)
