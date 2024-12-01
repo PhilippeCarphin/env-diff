@@ -5,6 +5,24 @@ if ! (return 0 2>/dev/null) ; then
 fi
 
 _env_diff_root="$(cd -P $(dirname ${BASH_SOURCE[0]}) && pwd)"
+_env_diff_cmd=""
+_env_diff_log(){
+    local level=$1 ; shift
+    local color
+    case ${level} in
+        INTERNAL_ERROR) color=$'\033[1;41;37m' ;;
+        ERROR) color=$'\033[1;31m' ;;
+        WARNING) color=$'\033[33m' ;;
+        INFO) color=$'\033[35m' ;;
+        DEBUG) color=$'\033[36m' ;;
+        *) _env_diff_log ERROR "Unknown log level ${level}" ; return 1 ;;
+    esac
+    local format="[${_env_diff_cmd} ${color}${level}\033[0m] %s\n"
+    if [[ ${level} == DEBUG ]] ; then
+        format="[${_env_diff_cmd} ${color}${level}\033[0m - ${FUNCNAME[1]}] %s\n"
+    fi
+    printf "${format}" "$*" >&2
+}
 
 _env-diff-short_help(){
     cat <<- EOF
@@ -35,6 +53,7 @@ env-diff(){
     local -a _env_diff_compare_args=()
     local _env_diff_keep_tmpdir=false
     local _env_diff_local_tmpdir=false
+    local _env_diff_cmd=env-diff
 
     local _env_diff_python3=""
     local _env_diff_sort=""
@@ -60,7 +79,7 @@ env-diff(){
             --show-function-bodies) _env_diff_compare_args+=(--show-function-bodies) ; shift ;;
             -h) _env-diff-short_help ; return 0 ;;
             --) shift ; break ;;
-            *) echo "env-diff: ERROR: unknown argument '$1'" >&2;
+            *) _env_diff_log ERROR "unknown argument '$1'"
                _env-diff-short_help ; return 1 ;;
         esac
     done
@@ -71,19 +90,20 @@ env-diff(){
     else
         _env_diff_tmpdir=$(mktemp -d) || return 1
     fi
-    echo "env-diff: INFO: tmpdir in '${_env_diff_tmpdir}'" >&2
+    _env_diff_log INFO "tmpdir in '${_env_diff_tmpdir}'"
 
     _env-diff-internal "$@"
 
     if ! ${_env_diff_keep_tmpdir} ; then
         local cmd=(rm -rf "${_env_diff_tmpdir}")
-        echo "env-diff: INFO: Deleting tmpdir '${cmd[*]}'" >&2
+        _env_diff_log INFO "Deleting tmpdir '${cmd[*]}'"
         "${cmd[@]}"
     fi
 }
 
 env-diff-gencode(){
-    python3 ${_env_diff_root}/env-diff-generate-code.py "$@"
+    local _env_diff_cmd=env-diff-gencode
+    env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-generate-code.py "$@"
 }
 
 ################################################################################
@@ -97,18 +117,18 @@ _env-diff-internal(){
         # like BASHPID and BASH_SUBSHELL to be the same
         ${_env_diff_mkdir} ${_env_diff_tmpdir}/before || return 1
         if ! _env-diff-save_all_info ${_env_diff_tmpdir}/before ; then
-            echo "env-diff: ERROR: saving initial info" >&2
+            _env_diff_log ERROR "saving initial info"
             return 1
         fi
 
-        echo "env-diff: INFO: Running command '$*'" >&2
+        _env_diff_log INFO "Running command '$*'"
         if ! eval "$@" ; then
-            printf "env-diff: INFO: Command '$*' failed\n" >&2
+            _env_diff_log INFO "Command '$*' failed"
         fi
 
         ${_env_diff_mkdir} -p ${_env_diff_tmpdir}/after || return 1
         if ! _env-diff-save_all_info ${_env_diff_tmpdir}/after ; then
-            echo "env-diff: ERROR: saving final info" >&2
+            _env_diff_log ERROR "saving final info"
             return 1
         fi
 
@@ -129,13 +149,14 @@ _env-diff-internal(){
     if ! ${_env_diff_python3} ${_env_diff_root}/env-diff-compare.py \
             "${_env_diff_compare_args[@]}" \
             "${_env_diff_tmpdir}/before" "${_env_diff_tmpdir}/after" ; then
-        echo "env-diff: ERROR: in python comparison script" >&2
+        _env_diff_log ERROR "in python comparison script"
         return 1
     fi
 }
 
 env-diff-compare(){
-    python3 ${_env_diff_root}/env-diff-compare.py "$@"
+    local _env_diff_cmd=env-diff-compare
+    env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-compare.py "$@"
 }
 
 _env-diff-setup(){
@@ -149,18 +170,18 @@ _env-diff-setup(){
         # Note: bash 3 (the version that comes with MacOS) does not have [[ -v
         # VARNAME ]] so we have to do it with declare.
         if ! declare -p ${!nameref} >/dev/null 2>&1 ; then
-            echo "env-diff: INTERNAL ERROR: The variable '${!nameref}' must be declared in the calling scope" >&2
+            _env_diff_log INTERNAL_ERROR "The variable '${!nameref}' must be declared in the calling scope"
             return 1
         fi
 
         if ! nameref=$(which ${program} 2>/dev/null) ; then
-            echo "env-diff: ERROR: Program ${program} not found in PATH : required for operation" >&2
+            _env_diff-log ERROR "Program ${program} not found in PATH : required for operation"
             return 1
         fi
     done
 
     if ! [[ -v _env_diff_jq_length_str ]] ; then
-        echo "env-diff: INTERNAL ERROR: The variable '_env_diff_jq_length_str' must be declared in the calling scope" >&2
+        _env_diff_log INTERNAL_ERROR "The variable '_env_diff_jq_length_str' must be declared in the calling scope"
         return 1
     fi
     _env_diff_jq_length_str=$(
@@ -178,6 +199,7 @@ _env-diff-setup(){
 env-diff-save(){
     # Declarations must be followed by `=""` so that the test '[[ -v .... ]]'
     # will say that it the variable is declared
+    local _env_diff_cmd=env-diff-save
     local _env_diff_python3=""
     local _env_diff_sort=""
     local _env_diff_comm=""
@@ -192,10 +214,12 @@ env-diff-save(){
     fi
 
     if [[ "$1" == -h ]] || [[ "$1" == --help ]] ; then
-        echo "${FUNCNAME[0]} DIR"
-        echo ""
-        echo "Save all info for use by env-diff-compare."
-        echo "Run \`env-diff --help\` for more information"
+        cat <<-EOF
+			${FUNCNAME[0]} DIR
+
+			Save all info for use by env-diff-compare.
+			Run \`env-diff --help\` for more information
+		EOF
         return 0
     fi
 

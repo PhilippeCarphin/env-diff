@@ -2,6 +2,35 @@ import os
 import json
 import shlib
 import sys
+import logging
+
+special_vars = [
+        "EPOCHSECONDS",
+        "SECONDS",
+        "EPOCHREALTIME",
+        "COLUMNS",
+        "LINES",
+        "RANDOM",
+        "HISTCMD",
+        "BASHPID",
+        "SRANDOM",
+
+        "BASH_SOURCE",
+        "BASH_LINENO",
+        "BASH_ARGC",
+        "BASH_ARGV",
+        "BASH_CMDS",
+        "FUNCNAME",
+
+        "PS1",
+
+        "BASHOPTS",
+        "EUID",
+        "PPID",
+        "SHELLOPTS",
+        "UID",
+        "BASH_VERSINFO"
+]
 
 class ShellEnvironmentData:
     """
@@ -44,14 +73,15 @@ class ShCodeGenerator:
         self.output = output
 
     def set_var(self, name: str, value: str):
-        readonly_vars = ['BASHOPTS', 'EUID', 'PPID', 'SHELLOPTS', 'UID', 'BASH_VERSINFO']
-        if name in readonly_vars:
+        if name.startswith("_env_diff_"):
+            logging.debug(f"Not unsetting variable {name} starting with '_env_diff_'")
+            return
+        if name in special_vars:
             return
         self.output.write(f"{name}={shlib.quote_arg(value)}\n")
 
     def set_env_var(self, name, value):
-        readonly_vars = ['BASHOPTS', 'EUID', 'PPID', 'SHELLOPTS', 'UID', 'BASH_VERSINFO']
-        if name in readonly_vars:
+        if name in special_vars:
             return
         self.output.write(f"export {name}={shlib.quote_arg(value)}\n")
 
@@ -59,6 +89,9 @@ class ShCodeGenerator:
         self.output.write(f"export -n {name}\n")
 
     def set_func(self, name, value):
+        if name.startswith("_env-diff") or name.startswith("env-diff"):
+            logging.debug(f"Not setting env-diff function {name}")
+            return
         self.output.write(name + "()")
         self.output.write('\n'.join(value))
         self.output.write('\n')
@@ -91,7 +124,8 @@ class ShCodeGenerator:
            | $ alias x
            | bash: alias: x: not found
         """
-        if name in ['BASH_ARGC', 'BASH_ARGV', 'BASH_LINENO']:
+        if name in special_vars:
+            logging.debug(f"Array {name} cannot be changed, skipping")
             return
         new = set(f.keys()) - set(i.keys())
         common = set(i.keys()).intersection(set(f.keys()))
@@ -107,8 +141,8 @@ class ShCodeGenerator:
                 self.output.write(f"unset {name}[{k}]\n")
 
     def set_normal_array(self, name, value):
-        # TODO: Maybe this is not the right place for this
-        if name in ['BASH_ARGC', 'BASH_ARGV', 'BASH_LINENO']:
+        if name in special_vars:
+            logging.debug(f"Not setting special variable {name}")
             return
         self.output.write(f"declare -a {name}\n")
         if isinstance(value, list):
@@ -145,9 +179,18 @@ class ShCodeGenerator:
         self.output.write(f"trap -- {shlib.quote_arg(value)} {name}\n")
 
     def unset_var(self, name):
+        if name.startswith("_env_diff_"):
+            logging.debug(f"Not unsetting variable {name} starting with '_env_diff_'")
+            return
+        if name in special_vars:
+            logging.debug(f"Not unsetting special variable {name}")
+            return
         self.output.write(f"unset {name}\n")
 
     def unset_func(self, name):
+        if name.startswith("_env-diff") or name.startswith("env-diff"):
+            logging.debug(f"Not unsetting env-diff function {name}")
+            return
         self.output.write(f"unset -f {name}\n")
 
     def unset_trap(self, name):
@@ -172,6 +215,9 @@ class EnvComponentDiff:
         # TODO:  Deal with ignored variables
         # (we don't care about colon lists here because that's just for how
         # we display variable differences)
+        # TODO: Here we could remove from new, deleted, changed, the names that
+        # - special_variables
+        # - begin with _env_diff, env-diff, or _env-diff
         self.initial = i
         self.final = f
         self.new = set(f.keys()) - set(i.keys())
@@ -224,6 +270,7 @@ class ShellEnvironmentDiff:
         to another component.  And in the case of an environment variable moving
         to another component, we unexport it.
         """
+        logging.debug("Generating code")
         gen = ShCodeGenerator(output)
 
         gen.comment("Apply environment changes")
@@ -258,12 +305,14 @@ class ShellEnvironmentDiff:
         gen.box("NORMAL ARRAYS")
         for name in self.normal_arrays.deleted:
             if not self.deleted_normal_array_moved(name):
+                logging.debug(f"Unsetting deleted normal array {name}")
                 gen.unset_var(name)
         for name in self.normal_arrays.new:
+            logging.debug(f"Setting new normal array {name}")
             gen.set_normal_array(name, self.normal_arrays.final[name])
         for name in self.normal_arrays.changed:
+            logging.debug(f"Changing normal array {name}")
             gen.change_array(name, self.normal_arrays.initial[name], self.normal_arrays.final[name])
-            # gen.set_normal_array(name, self.normal_arrays.final[name])
 
         gen.box("ASSOC ARRAYS")
         for name in self.assoc_arrays.deleted:
@@ -273,8 +322,8 @@ class ShellEnvironmentDiff:
             gen.set_assoc_array(name, self.assoc_arrays.final[name])
         for name in self.assoc_arrays.changed:
             gen.change_array(name, self.assoc_arrays.initial[name], self.assoc_arrays.final[name])
-            # gen.set_assoc_array(name, self.assoc_arrays.final[name])
 
+        gen.box("FUNCTIONS")
         gen.comment("Option expand_aliases must be off for function part")
         gen.comment("in case the name of the function is an alias")
         gen.set_shopt_option("expand_aliases", "off")

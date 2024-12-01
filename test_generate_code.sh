@@ -8,12 +8,15 @@ tmpdir=$(mktemp -d codegen.tmpXXXXXX)
 
 alias ls='ls --hello=world'
 shopt -s expand_aliases
+test_log(){
+    printf "\033[1;35m$0: %s\n" "$*" >&2
+}
 
 (
-    echo "saving ${tmpdir}/before"
+    test_log "saving ${tmpdir}/before"
     env-diff-save ${tmpdir}/before
 
-    echo "Changing environment"
+    test_log "Changing environment"
     A=B;
     export X=Y;
     export -n HOME
@@ -28,7 +31,7 @@ shopt -s expand_aliases
     shopt -so errexit;
     shopt -u sourcepath;
 
-    echo "saving ${tmpdir}/after"
+    test_log "saving ${tmpdir}/after"
     env-diff-save ${tmpdir}/after
 )
 
@@ -39,10 +42,10 @@ env-diff-save ${tmpdir}/after-source
 
 diff="$(env-diff-compare -F /dev/null ${tmpdir}/after ${tmpdir}/after-source)"
 if [[ -z "${diff}" ]] ; then
-    echo "SUCCESS: No differences"
+    test_log "SUCCESS: No differences"
 else
-    echo "Potential failure: there were some differences:"
-    echo "${diff}"
+    test_log "Potential failure: there were some differences:"
+    test_log "${diff}"
 fi
 
 

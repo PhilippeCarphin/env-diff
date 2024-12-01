@@ -57,6 +57,8 @@ def get_args():
     global colon_lists
     global space_lists
 
+    if '_env_diff_cmd' in os.environ:
+        sys.argv[0] = os.environ['_env_diff_cmd']
     p = argparse.ArgumentParser()
     p.add_argument("--list-diff", action='store_true')
     p.add_argument("--no-ignore", action='store_true')
