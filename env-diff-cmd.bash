@@ -82,6 +82,10 @@ env-diff(){
     fi
 }
 
+env-diff-gencode(){
+    python3 ${_env_diff_root}/env-diff-generate-code.py "$@"
+}
+
 ################################################################################
 # Main function of env-diff: We save everything, run the command, save everything
 # again and finally run the python comparison script
