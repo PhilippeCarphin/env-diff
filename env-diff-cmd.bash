@@ -128,13 +128,16 @@ env-diff-load(){
     local _env_diff_tmpdir=$(mktemp -d tmp.env-diff-load.XXXXXX) || return 1
     _env_diff_log INFO "Using tmpdir=${_env_diff_tmpdir} to save current environment"
     env-diff-save "${_env_diff_tmpdir}/current" || return 1
+    _env_diff_log INFO "Generating code to go from ${_env_diff_tmpdir}/current to $1"
     if [[ $1 == --debug ]] ; then
         shift
         env-diff-gencode "${_env_diff_tmpdir}/current" --debug "$1" > ${_env_diff_tmpdir}/to_source
+        _env_diff_log DEBUG "sourcing ${_env_diff_tmpdir}/to_source"
         source ${_env_diff_tmpdir}/to_source
     else
         env-diff-gencode "${_env_diff_tmpdir}/current" "$1" > ${_env_diff_tmpdir}/to_source
         source ${_env_diff_tmpdir}/to_source
+        _env_diff_log INFO "Deleting tmpdir=${_env_diff_tmpdir}"
         rm -rf "${_env_diff_tmpdir}"
     fi
 }
@@ -258,17 +261,17 @@ env-diff-save(){
 
     if (( $# != 1 )) ; then
         ${FUNCNAME[0]} -h
-        echo "${FUNCNAME[0]}: ERROR: This function takes exactly one argument" >&2
+        _env_diff_log ERROR "This function takes exactly one argument"
         return 1
     fi
 
     if [[ -e "$1" ]] ; then
-        echo "${FUNCNAME[0]}: ERROR: Cannot create save directory: already exists"
+        _env_diff_log ERROR "Cannot create save directory: already exists"
         return 1
     fi
 
     if ! mkdir "$1" ; then
-        echo "${FUNCNAME[0]}: ERROR: Could not create directory '$1'" >&2
+        _env_diff_log ERROR "Could not create directory '$1'"
         return 1
     fi
 

@@ -1,7 +1,9 @@
 import logging
 import sys
+import os
 
-FORMAT = "[{levelname} - {funcName}()] {message}"
+name = os.path.basename(sys.argv[0])
+FORMAT = "[" + name + " {levelname} - {funcName}()] {message}"
 
 def configureLogging(format=FORMAT, level=logging.DEBUG):
 
