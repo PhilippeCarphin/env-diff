@@ -21,14 +21,11 @@ def get_args():
     # - Maybe it could have the path to a reference environment so that if we
     #   only give one environment on the command line, then the initial one
     #   will be taken from the config file.
-    p.add_argument("initial", nargs=1, help="Initial environment directory from env-diff-save")
-    p.add_argument("final", nargs=1, help="Final environment directory from env-diff-save")
+    p.add_argument("initial", help="Initial environment directory from env-diff-save")
+    p.add_argument("final", help="Final environment directory from env-diff-save")
     p.add_argument("--output", "-o", type=pathlib.Path)
     p.add_argument("--debug", action='store_true', help="Set log level to DEBUG")
     args = p.parse_args()
-
-    args.initial = args.initial[0]
-    args.final = args.final[0]
 
     return args
 

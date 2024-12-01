@@ -64,7 +64,8 @@ def get_args():
     p.add_argument("--no-ignore", action='store_true')
     p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.yml"), help="Select alternate config file")
     p.add_argument("--show-function-bodies", action='store_true', help="Show bodies of new functions")
-    p.add_argument("files", nargs=2)
+    p.add_argument("initial", help="Initial environment created with env-diff-save")
+    p.add_argument("final", help="Final environment created with env-diff-save")
     args = p.parse_args()
 
     # TODO: As described in main(): Move all this to the __init__() of
@@ -110,8 +111,8 @@ def main():
     #     method of the class sets attributes for the ignored variables
     #     and colon lists and son on
     # - This file would be more like the new env-diff-generate-code.py
-    before = envdiff.ShellEnvironmentData(args.files[0])
-    after = envdiff.ShellEnvironmentData(args.files[1])
+    before = envdiff.ShellEnvironmentData(args.initial)
+    after = envdiff.ShellEnvironmentData(args.final)
     compare_variables(before.env_vars, after.env_vars, env=True)
     compare_variables(before.shell_vars, after.shell_vars, env=False)
     compare_associative_arrays(before.assoc_arrays, after.assoc_arrays)
