@@ -65,6 +65,8 @@ def get_args():
     p.add_argument("files", nargs=2)
     args = p.parse_args()
 
+    # TODO: As described in main(): Move all this to the __init__() of
+    # ShellEnvironmentDiff
     if os.path.isfile(args.config_file) and have_yaml:
         with open(args.config_file) as f:
             config = yaml.safe_load(f)
@@ -99,6 +101,13 @@ def main():
     Perform the entire set of comparisons
     """
     setup_function_dictionnaries(display_functions, comparison_functions)
+    # TODO: Use envdiff.ShellEnvironmentDiff:
+    # - Make all these compare_*() functions methods of the class
+    # - Give the class's __init__() method a config argument
+    #   - The getargs gets the config file path and the __init__()
+    #     method of the class sets attributes for the ignored variables
+    #     and colon lists and son on
+    # - This file would be more like the new env-diff-generate-code.py
     before = envdiff.ShellEnvironmentData(args.files[0])
     after = envdiff.ShellEnvironmentData(args.files[1])
     compare_variables(before.env_vars, after.env_vars, env=True)
@@ -114,6 +123,9 @@ def compare_variables(i: dict,f: dict, env):
     """
     Compare sets of shell or environment variables.
     """
+    # TODO: Same for all the other compare_*() functions: base them on
+    #       EnvomponentDiff so I don't have to repeat this new, deleted,
+    #       common, changed stuff at the top of each of them
     new = set(f.keys()) - set(i.keys())
     deleted = set(i.keys()) - set(f.keys())
     common = set(i.keys()).intersection(set(f.keys())) - set(ignored_variables)
