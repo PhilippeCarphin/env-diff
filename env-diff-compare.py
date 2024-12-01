@@ -5,13 +5,16 @@ import difflib
 import re
 import argparse
 import envdiff
+import envdifflogging
+
+envdifflogging.configureLogging()
 
 have_yaml = False
 try:
     import yaml
     have_yaml = True
 except:
-    print(f"env-diff: \033[1;33mWARNING\033[0m: The python package 'pyyaml' could not be imported.  It can be installed with `python3 -m pip install [--user] pyyaml`.")
+    logging.warning(f"env-diff: \033[1;33mWARNING\033[0m: The python package 'pyyaml' could not be imported.  It can be installed with `python3 -m pip install [--user] pyyaml`.")
     pass
 
 try:
