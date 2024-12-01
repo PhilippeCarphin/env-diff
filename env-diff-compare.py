@@ -198,7 +198,7 @@ def compare_associative_arrays(i: dict,f: dict):
     if deleted:
         print('\033[4;31mDeleted Associative Arrays\033[0m')
         for var in sorted(deleted):
-            print(f"{var}: {f[var]}")
+            print(f"{var}")
 
     if changed:
         print('\033[4;33mModified Associative Arrays\033[0m')
