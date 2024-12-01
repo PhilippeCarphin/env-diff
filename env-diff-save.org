@@ -1,0 +1,45 @@
+#+TITLE: env-diff-save
+
+* NAME
+
+env-diff-save - Save a complete shell environment
+
+* SYNOPSIS
+
+#+begin_src shell
+env-diff-save DIR
+#+end_src
+
+* DESCRIPTION
+
+Save a complete shell environment to directory for use by =env-diff-compare=,
+=env-diff-gencode= or =env-diff-load=.
+
+* CONFIGURATION
+
+There is no configuration.  Absolutely everything about the environment is
+saved.  Configuration only affects how differences are displayed by
+=env-diff-compare=.
+
+* CAVEATS
+
+See CAVEATS section of =env-diff --help= which explains that some traps
+cannot be reliably saved.
+
+* DEPENDENCIES
+
+- jq
+- standard UNIX tools (sort, comm, cut, cat, mkdir, mktemp)
+- python3
+
+Optionally if the python package =pygments= is available, it will be used to
+hightlight the body of new shell functions.
+
+The python package =pyyaml= (=python3 -m pip install [--user] pyyaml=) must be
+installed to read the config file =~/.config/env-diff.yml=.
+
+* AUTHOR
+
+Philippe Carphin
+
+

@@ -19,6 +19,18 @@ env-diff-compare [options] BEFORE AFTER
 Compare directories created with env-diff-save.
 ```
 
+```
+env-diff-gencode [options] BEFORE AFTER
+
+Generate BASH code to go from BEFORE to AFTER
+```
+
+```
+env-diff-load [options] DIRECTORY
+
+Load the environment from DIRECTORY created with env-diff-save
+```
+
 All commands save and compare these aspects of the shell environment:
 - Environment variables
 - Shell variables
@@ -61,4 +73,7 @@ env-diff 'f(){ echo "HELLO" ; }
 
 # Details
 
-[manpage](env-diff.org)
+[env-diff manpage](env-diff.org)
+[env-diff-save manpage](env-diff-save.org)
+[env-diff-gencode manpage](env-diff-gencode.org)
+[env-diff-load manpage](env-diff-load.org)

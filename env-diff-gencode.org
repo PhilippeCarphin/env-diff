@@ -1,0 +1,62 @@
+#+TITLE: env-diff-gencode
+
+* NAME
+
+env-diff-gencode - Generate BASH code to go from one environment to another.
+
+* SYNOPSIS
+
+#+begin_src shell
+env-diff-gencode [OPTIONS] BEFORE AFTER
+#+end_src
+
+* DESCRIPTION
+
+Generate shell code to go from BEFORE to AFTER where BEFORE and AFTER are two
+saved environments produced with =env-diff-save=.
+
+* CONFIGURATION
+
+There is no configuration right now.  All BASH special variables are either
+ignored or have a special treatment which cannot be configured.
+
+Reading additional variables to ignore from a config file is not implemented
+
+* OPTIONS
+
+Note: Options must come before =CMD=
+
+** ~--output OUTPUT~
+
+Default output is STDOUT but a file OUTPUT can be specified instead.
+
+** ~--debug~
+
+Set log level to DEBUG.
+
+* CAVEATS
+
+See =Traps= subsection of =CAVEATS= section in =env-diff --help=
+
+* SPECIAL VARIABLES
+
+See =env-diff --help=.  For code generation special variables cannot be
+configured.
+
+* DEPENDENCIES
+
+- jq
+- standard UNIX tools (sort, comm, cut, cat, mkdir, mktemp)
+- python3
+
+Optionally if the python package =pygments= is available, it will be used to
+hightlight the body of new shell functions.
+
+The python package =pyyaml= (=python3 -m pip install [--user] pyyaml=) must be
+installed to read the config file =~/.config/env-diff.yml=.
+
+* AUTHOR
+
+Philippe Carphin
+
+

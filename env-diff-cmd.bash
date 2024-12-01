@@ -102,28 +102,50 @@ env-diff(){
 }
 
 env-diff-gencode(){
+    if [[ $1 == -h ]] ; then
+        cat <<-EOF
+			usage: ${FUNCNAME[0]} [-h|--help] [--debug] [--output FILE] BEFORE AFTER
+
+			    Generate shell code to go from environment BEFORE to environment AFTER
+			    where BEFORE and AFTER are directories created with env-diff-save.
+
+			Options:
+
+			    -h                Print short help
+			    --help            Show manpage
+			    --debug           Set log level to debug
+			    --output FILE     Set ouput to FILE (default is STDOUT)
+		EOF
+        return
+    elif [[ $1 == --help ]] ; then
+        man ${_env_diff_root}/env-diff-gencode.1
+        return
+    fi
+
     local _env_diff_cmd=env-diff-gencode
     env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-generate-code.py "$@"
 }
 
 env-diff-load(){
-    local _env_diff_cmd=env-diff-load
-    case "$1" in -h|--help)
+    if [[ $1 == -h ]] ; then
         cat <<-EOF
-			Usage ${FUNCNAME[0]} [-h|--help] [--debug] DIR
+			usage: ${FUNCNAME[0]} [-h|--help] [--debug] DIR
 
-			Load environment created by env-diff-save
-			NOTE: This works by saving the current environment using env-diff-save
-			in a temporary directory then using env-diff-gencode to generate shell
-			code to go from the current environment to the one in DIR.  This code
-			goes in a file 'to_source' in the same temporary directory.  The file
-			is then sourced.
-			The --debug option will prevent the deletion of the temporary directory
-			and set the logging level to DEBUG in env-diff-gencode.
+			    Load environment DIR where DIR is a saved environment created
+			    with env-diff-save
+
+			Options:
+
+			    -h                Print short help
+			    --help            Show manpage
+			    --debug           Set log level to debug
 		EOF
-        return 0
-        ;;
-    esac
+        return
+    elif [[ $1 == --help ]] ; then
+        man ${_env_diff_root}/env-diff-load.1
+        return
+    fi
+    local _env_diff_cmd=env-diff-load
 
     local _env_diff_tmpdir=$(mktemp -d tmp.env-diff-load.XXXXXX) || return 1
     _env_diff_log INFO "Using tmpdir=${_env_diff_tmpdir} to save current environment"
@@ -249,13 +271,16 @@ env-diff-save(){
         return 1
     fi
 
-    if [[ "$1" == -h ]] || [[ "$1" == --help ]] ; then
+    if [[ "$1" == -h ]] ; then
         cat <<-EOF
 			${FUNCNAME[0]} DIR
 
 			Save all info for use by env-diff-compare.
-			Run \`env-diff --help\` for more information
+			Run \`env-diff-save --help\` for more information
 		EOF
+        return 0
+    elif [[ "$1" == --help ]] ; then
+        man ${_env_diff_root}/env-diff-save.1
         return 0
     fi
 

@@ -1,0 +1,54 @@
+#+TITLE: env-diff-load
+
+* NAME
+
+env-diff-load - Load a saved environment
+
+* SYNOPSIS
+
+#+begin_src shell
+env-diff-load [OPTIONS] DIR
+#+end_src
+
+* DESCRIPTION
+
+Load the environment DIR created with =env-diff-save DIR=.  This is a
+convenience function that uses =env-diff-save= and =env-diff-gencode=.
+
+* CONFIGURATION
+
+There is no configuration.  See CONFIGURATION section of =env-diff-gencode --help=.
+
+* OPTIONS
+
+Note: Options must come before =DIR=
+
+** ~--debug~
+
+Keep the generated temporary directory and set log level to DEBUG
+
+* CAVEATS
+
+See the CAVEATS section of =env-diff --help= about the special shell traps.
+
+* SPECIAL VARIABLES
+
+See SPECIAL VARIABLES section of =env-diff-gencode --help=.
+
+* DEPENDENCIES
+
+- jq
+- standard UNIX tools (sort, comm, cut, cat, mkdir, mktemp)
+- python3
+
+Optionally if the python package =pygments= is available, it will be used to
+hightlight the body of new shell functions.
+
+The python package =pyyaml= (=python3 -m pip install [--user] pyyaml=) must be
+installed to read the config file =~/.config/env-diff.yml=.
+
+* AUTHOR
+
+Philippe Carphin
+
+
