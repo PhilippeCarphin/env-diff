@@ -31,7 +31,7 @@ class ShellEnvironmentData:
             with open(os.path.join(data_dir, f"func_names.txt")) as f:
                 for name in f.read().splitlines():
                     with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash")) as func:
-                        lines = func.read().splitlines()[2:]
+                        lines = func.read().splitlines()[1:]
                         self.functions[name] = lines
             with open(os.path.join(data_dir, f"traps.json")) as f:
                 self.traps = json.load(f)

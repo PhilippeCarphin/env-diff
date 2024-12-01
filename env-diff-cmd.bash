@@ -250,7 +250,7 @@ _env-diff-save_all_info(){
     compgen -A function | ${_env_diff_sort} > $1/func_names.txt || return 1
     local f
     while read f ; do
-        type ${f} > $1/functions/BASH_FUNC_${f}.bash || return 1
+        declare -f ${f} > $1/functions/BASH_FUNC_${f}.bash || return 1
     done < $1/func_names.txt
 
     # Save shell options
