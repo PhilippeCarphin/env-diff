@@ -106,6 +106,39 @@ env-diff-gencode(){
     env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-generate-code.py "$@"
 }
 
+env-diff-load(){
+    local _env_diff_cmd=env-diff-load
+    case "$1" in -h|--help)
+        cat <<-EOF
+			Usage ${FUNCNAME[0]} [-h|--help] [--debug] DIR
+
+			Load environment created by env-diff-save
+			NOTE: This works by saving the current environment using env-diff-save
+			in a temporary directory then using env-diff-gencode to generate shell
+			code to go from the current environment to the one in DIR.  This code
+			goes in a file 'to_source' in the same temporary directory.  The file
+			is then sourced.
+			The --debug option will prevent the deletion of the temporary directory
+			and set the logging level to DEBUG in env-diff-gencode.
+		EOF
+        return 0
+        ;;
+    esac
+
+    local _env_diff_tmpdir=$(mktemp -d tmp.env-diff-load.XXXXXX) || return 1
+    _env_diff_log INFO "Using tmpdir=${_env_diff_tmpdir} to save current environment"
+    env-diff-save "${_env_diff_tmpdir}/current" || return 1
+    if [[ $1 == --debug ]] ; then
+        shift
+        env-diff-gencode "${_env_diff_tmpdir}/current" --debug "$1" > ${_env_diff_tmpdir}/to_source
+        source ${_env_diff_tmpdir}/to_source
+    else
+        env-diff-gencode "${_env_diff_tmpdir}/current" "$1" > ${_env_diff_tmpdir}/to_source
+        source ${_env_diff_tmpdir}/to_source
+        rm -rf "${_env_diff_tmpdir}"
+    fi
+}
+
 ################################################################################
 # Main function of env-diff: We save everything, run the command, save everything
 # again and finally run the python comparison script
