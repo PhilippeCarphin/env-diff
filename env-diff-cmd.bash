@@ -214,6 +214,10 @@ _env-diff-internal(){
 
 env-diff-compare(){
     local _env_diff_cmd=env-diff-compare
+    if [[ $1 == --help ]] ; then
+        man ${_env_diff_root}/env-diff-compare.1
+        return
+    fi
     env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-compare.py "$@"
 }
 
