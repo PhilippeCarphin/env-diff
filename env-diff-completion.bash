@@ -27,14 +27,20 @@ _env_diff_compare_options=(
     --local-tmpdir
     --help
     -h
-)
-_env_diff_cmd_options=(
     --show-function-bodies
     --list-diff
     -F
 )
+_env_diff_cmd_options=(
+)
 _env_diff_cmd_arg_options=(
     -F
+)
+_env_diff_gencode_options=(
+    --debug
+)
+_env_diff_load_options=(
+    --debug
 )
 _env_diff_is_arg_option(){
     for o in "${_env_diff_cmd_arg_options[@]}" ; do
@@ -79,7 +85,10 @@ _env_diff_compare(){
     local cur prev words cword
     _init_completion || return
 
-    COMPREPLY=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
+    fi
+    _filedir -d
 }
 
 _env_diff_dash_dash_seen(){
@@ -92,5 +101,27 @@ _env_diff_dash_dash_seen(){
     return 1
 }
 
+_env_diff_gencode(){
+    local cur prev words cword
+    _init_completion || return
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${_env_gencode_options[*]}" -- ${cur}) )
+    fi
+    _filedir -d
+}
+
+_env_diff_load(){
+    local cur prev words cword
+    _init_completion || return
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${_env_load_options[*]}" -- ${cur}) )
+    fi
+    _filedir -d
+}
+
 complete -F _env_diff env-diff
-complete -F _env_diff_compare env-diff-compare
+complete -o default -F _env_diff_compare env-diff-compare
+complete -o default -F _env_diff_gencode env-diff-gencode
+complete -o default -F _env_diff_load env-diff-load
