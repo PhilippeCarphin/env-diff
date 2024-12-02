@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euEo pipefail
+set -uEo pipefail
 shopt -s inherit_errexit
 
 source ./env-diff-cmd.bash
@@ -9,7 +9,7 @@ tmpdir=$(mktemp -d tmp.test-gencode.XXXXXX)
 alias ls='ls --hello=world'
 shopt -s expand_aliases
 test_log(){
-    printf "\033[1;35m$0: %s\n" "$*" >&2
+    printf "\033[1;35m$0: %s\033[0m\n" "$*" >&2
 }
 
 (
