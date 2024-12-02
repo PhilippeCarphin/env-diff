@@ -4,7 +4,7 @@ shopt -s inherit_errexit
 
 source ./env-diff-cmd.bash
 
-tmpdir=$(mktemp -d codegen.tmpXXXXXX)
+tmpdir=$(mktemp -d tmp.test-gencode.XXXXXX)
 
 alias ls='ls --hello=world'
 shopt -s expand_aliases
