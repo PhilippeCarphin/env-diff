@@ -5,7 +5,6 @@ environments saved with env-diff-save
 
 import envdiff
 import argparse
-import shutil
 import shlib
 import pathlib
 import sys
