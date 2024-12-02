@@ -37,9 +37,11 @@ _env_diff_cmd_arg_options=(
     -F
 )
 _env_diff_gencode_options=(
+    --help
     --debug
 )
 _env_diff_load_options=(
+    --help
     --debug
 )
 _env_diff_is_arg_option(){

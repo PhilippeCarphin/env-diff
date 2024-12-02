@@ -75,7 +75,7 @@ env-diff(){
             -F)          _env_diff_compare_args+=(-F $2); shift ; shift ;;
             --keep-tmpdir) _env_diff_keep_tmpdir=true ; shift ;;
             --local-tmpdir) _env_diff_local_tmpdir=true ; shift ;;
-            --help) man ${_env_diff_root}/env-diff.1 ; return 0 ;;
+            --help) man ${_env_diff_root}/manpages/env-diff.1 ; return 0 ;;
             --show-function-bodies) _env_diff_compare_args+=(--show-function-bodies) ; shift ;;
             -h) _env-diff-short_help ; return 0 ;;
             --) shift ; break ;;
@@ -118,7 +118,7 @@ env-diff-gencode(){
 		EOF
         return
     elif [[ $1 == --help ]] ; then
-        man ${_env_diff_root}/env-diff-gencode.1
+        man ${_env_diff_root}/manpages/env-diff-gencode.1
         return
     fi
 
@@ -142,7 +142,7 @@ env-diff-load(){
 		EOF
         return
     elif [[ $1 == --help ]] ; then
-        man ${_env_diff_root}/env-diff-load.1
+        man ${_env_diff_root}/manpages/env-diff-load.1
         return
     fi
     local _env_diff_cmd=env-diff-load
@@ -215,7 +215,7 @@ _env-diff-internal(){
 env-diff-compare(){
     local _env_diff_cmd=env-diff-compare
     if [[ $1 == --help ]] ; then
-        man ${_env_diff_root}/env-diff-compare.1
+        man ${_env_diff_root}/manpages/env-diff-compare.1
         return
     fi
     env _env_diff_cmd=${_env_diff_cmd} python3 ${_env_diff_root}/env-diff-compare.py "$@"
@@ -284,7 +284,7 @@ env-diff-save(){
 		EOF
         return 0
     elif [[ "$1" == --help ]] ; then
-        man ${_env_diff_root}/env-diff-save.1
+        man ${_env_diff_root}/manpages/env-diff-save.1
         return 0
     fi
 
