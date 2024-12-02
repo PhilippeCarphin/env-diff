@@ -49,9 +49,8 @@ _env_diff(){
     local cur prev words cword
     _init_completion || return
 
-    # Iterate over previous words (the last word, the one currently
-    # being completed is not included here because ${words} actually
-    # contains cword+1 elements.
+    # Iterate on words before the one at index cword (note: cword is
+    # for "cursor word", the index of the word containing the cursor)
     for ((i=1;i<cword;i++)) ; do
         if [[ "${words[i]}" == "--" ]] ; then
             return

@@ -291,7 +291,7 @@ env-diff-save(){
     fi
 
     if [[ -e "$1" ]] ; then
-        _env_diff_log ERROR "Cannot create save directory: already exists"
+        _env_diff_log ERROR "Cannot create save directory '$1': already exists"
         return 1
     fi
 
