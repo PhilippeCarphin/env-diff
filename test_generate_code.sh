@@ -37,8 +37,14 @@ test_log(){
 
 python3 env-diff-generate-code.py ${tmpdir}/before ${tmpdir}/after > ${tmpdir}/diff.sh
 
-source ${tmpdir}/diff.sh
-env-diff-save ${tmpdir}/after-source
+(
+    # Note: Aliases seem to be expanded when this whole subshell is
+    # read.  This means that we can't run say-hello at the end of this
+    # subshell even if the file 'diff.sh' defines it.  However if this were
+    # not in a subshell, we could run 'say-hello' after sourcing diff.sh.
+    source ${tmpdir}/diff.sh
+    env-diff-save ${tmpdir}/after-source
+)
 
 diff="$(env-diff-compare -F /dev/null ${tmpdir}/after ${tmpdir}/after-source)"
 if [[ -z "${diff}" ]] ; then
