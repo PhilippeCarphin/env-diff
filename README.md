@@ -142,9 +142,22 @@ env-diff-load(){
 }
 ```
 
+
 # Details
 
 - [env-diff manpage](env-diff.org)
 - [env-diff-save manpage](env-diff-save.org)
 - [env-diff-gencode manpage](env-diff-gencode.org)
 - [env-diff-load manpage](env-diff-load.org)
+
+# Dependencies
+
+- `jq`
+- standard UNIX tools (`sort`, `comm`, `cut`, `cat`, `mkdir`, `mktemp`)
+- `python3`
+  - `pyyaml` is optional but required to read config files
+  - `pygments` is optional.  If it is present it will be used to color function
+    bodies.
+  - `shlib` is required to use `env-diff-gencode` and `env-diff-load` to quote
+    values of shell variables.
+- For the autocomplete, a recent enough version of `bash-completion`
