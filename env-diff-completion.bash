@@ -30,6 +30,7 @@ _env_diff_compare_options=(
     --show-function-bodies
     --list-diff
     -F
+    --debug
 )
 _env_diff_cmd_options=(
 )

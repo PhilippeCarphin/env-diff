@@ -6,6 +6,7 @@ import re
 import argparse
 import envdiff
 import envdifflogging
+import logging
 
 envdifflogging.configureLogging()
 
@@ -14,7 +15,7 @@ try:
     import yaml
     have_yaml = True
 except:
-    logging.warning(f"env-diff: \033[1;33mWARNING\033[0m: The python package 'pyyaml' could not be imported.  It can be installed with `python3 -m pip install [--user] pyyaml`.")
+    logging.warning(f"The python package 'pyyaml' could not be imported.  It can be installed with `python3 -m pip install [--user] pyyaml`.  No config file will be loaded (see 'env-diff --help' for more info)")
     pass
 
 try:
@@ -64,6 +65,7 @@ def get_args():
     p.add_argument("--no-ignore", action='store_true')
     p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.yml"), help="Select alternate config file")
     p.add_argument("--show-function-bodies", action='store_true', help="Show bodies of new functions")
+    p.add_argument("--debug", help="Set log level to debug", action='store_true')
     p.add_argument("initial", help="Initial environment created with env-diff-save")
     p.add_argument("final", help="Final environment created with env-diff-save")
     args = p.parse_args()
@@ -227,6 +229,8 @@ def compare_normal_arrays(i: dict, f:dict):
     new = set(f.keys()) - set(i.keys())
     deleted = set(i.keys()) - set(f.keys())
     common = set(i.keys()).intersection(set(f.keys())) - ignored_normal_arrays
+    # common = {v for v in common if not v.startswith("_env_diff")}
+    logging.debug(f"ignored_normal_arrays = '{ignored_normal_arrays}'")
     changed = sorted(filter(lambda v: i[v] != f[v], common))
 
     if new or deleted or changed:
