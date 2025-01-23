@@ -5,7 +5,6 @@ environments saved with env-diff-save
 
 import envdiff
 import argparse
-import shlib
 import pathlib
 import sys
 import envdifflogging
@@ -32,13 +31,29 @@ def main():
     args = get_args()
     envdifflogging.configureLogging(level=(logging.INFO if not args.debug else logging.DEBUG))
 
+    try:
+        import codegen
+    except ModuleNotFoundError as e:
+        if e.name == 'shlib':
+            logging.error("Could not import 'shlib'.  This package is required for 'env-diff-gencode'")
+            return 1
+        else:
+            raise
+
     if args.output is None:
         output = sys.stdout
     else:
         output = open(args.output, 'w')
 
-    ed = envdiff.ShellEnvironmentDiff(args.initial, args.final)
-    ed.gencode(output)
+    try:
+        ed = envdiff.ShellEnvironmentDiff(args.initial, args.final)
+    except FileNotFoundError as e:
+        logging.error(f"No saved environment at '{e.filename}': {e}")
+        return 1
+    except envdiff.EnvDiffError as e:
+        logging.error(f"The directory '{e.directory}' does not appear to be a saved environment created with env-diff-save: missing '{e.filename}'")
+        return 1
+    codegen.gencode(ed, output)
 
 if __name__ == "__main__":
     sys.exit(main())
