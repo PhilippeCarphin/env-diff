@@ -7,7 +7,7 @@ env-diff - determine the effect of a command on the shell environment
 * SYNOPSIS
 
 #+begin_src shell
-env-diff [OPTIONS] CMD
+env-diff [OPTIONS] [--] CMD
 #+end_src
 
 * DESCRIPTION
@@ -75,7 +75,9 @@ ignored_assoc_arrays:
 
 * OPTIONS
 
-Note: Options must come before =CMD=
+Note: Options must come before =CMD=.  Option parsing stops at the
+first word that is not an option or the argument to an option that
+requires one or after =--=.
 
 ** ~--list-diff~
 
