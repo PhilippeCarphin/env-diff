@@ -1,0 +1,13 @@
+#+TITLE: Sourcing from a function and arguments
+
+Sourcing =normal.sh= defines =f= and doing
+#+begin_src shell
+f source arg-printer.sh
+#+end_src
+gives
+#+begin_src shell
+arg-printer.sh: arg: 'source'
+arg-printer.sh: arg: 'arg-printer.sh'
+#+end_src
+
+

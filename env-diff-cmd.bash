@@ -180,8 +180,10 @@ _env-diff-internal(){
         fi
 
         _env_diff_log INFO "Running command '$*'"
-        if ! eval "$@" ; then
-            _env_diff_log INFO "Command '$*' failed"
+        # See Notes/eval-command/ about why we don't just do 'eval "$@"'
+        cmd=("$@") ; set --
+        if ! eval "${cmd[@]}" ; then
+            _env_diff_log INFO "Command '${cmd[*]}' returned non-zero return code"
         fi
 
         ${_env_diff_mkdir} -p ${_env_diff_tmpdir}/after || return 1
