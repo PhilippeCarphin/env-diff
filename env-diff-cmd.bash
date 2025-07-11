@@ -63,6 +63,7 @@ env-diff(){
     local _env_diff_cat=""
     local _env_diff_mkdir=""
     local _env_diff_jq_length_str=""
+    local _env_diff_the_cmd
 
     if ! _env-diff-setup ; then
         return 1;
@@ -84,6 +85,8 @@ env-diff(){
         esac
     done
 
+    _env_diff_the_cmd=("$@")
+    set --
     local _env_diff_tmpdir
     if ${_env_diff_local_tmpdir} ; then
         _env_diff_tmpdir=$(mktemp -d tmp.env-diff.XXXXXX) || return 1
@@ -92,7 +95,7 @@ env-diff(){
     fi
     _env_diff_log INFO "tmpdir in '${_env_diff_tmpdir}'"
 
-    _env-diff-internal "$@"
+    _env-diff-internal
 
     if ! ${_env_diff_keep_tmpdir} ; then
         local cmd=(rm -rf "${_env_diff_tmpdir}")
@@ -181,8 +184,7 @@ _env-diff-internal(){
 
         _env_diff_log INFO "Running command '$*'"
         # See Notes/eval-command/ about why we don't just do 'eval "$@"'
-        cmd=("$@") ; set --
-        if ! eval "${cmd[@]}" ; then
+        if ! eval "${_env_diff_the_cmd[@]}" ; then
             _env_diff_log INFO "Command '${cmd[*]}' returned non-zero return code"
         fi
 
