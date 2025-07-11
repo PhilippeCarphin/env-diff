@@ -1,13 +1,77 @@
 #+TITLE: Sourcing from a function and arguments
 
-Sourcing =normal.sh= defines =f= and doing
-#+begin_src shell
-f source arg-printer.sh
+This explains why we have to do
+#+begin_src sh
+env-diff(){
+      _env_diff_the_cmd=("$@")
+      set --
+      _env-diff-internal
+}
+
+_env-diff-internal(){
+    ...
+    (
+          ...
+          if ! eval "${_env_diff_the_cmd[@]}" ; then
+          ...
+    }
+    ...
+}
 #+end_src
-gives
+instead of
+#+begin_src sh
+env-diff(){
+      _env-diff-internal "$@"
+}
+
+_env-diff-internal(){
+    ...
+    (
+          ...
+          if ! eval "$@"
+          ...
+    }
+    ...
+}
+#+end_src
+
+This has an effect when the command is =source file-to-source args...=.
+Normally we expect that when =file-to-source= prints =$@=, we see =args...=
+and when the command is =source file-to-source= (with no arguments), we
+expect that when =file-to-source= prints =$@= we see nothing.
+
+#+begin_src shell :results raw
+./run.sh
+#+end_src
+
 #+begin_src shell
+============= expectation ====================
+running 'source ./arg-printer.sh arg-to-sourced-script'
+arg-rpinter.sh: Number of arguments: 1
+arg-printer.sh: arg: 'arg-to-sourced-script'
+
+running 'source ./arg-printer.sh'
+arg-rpinter.sh: Number of arguments: 0
+
+============= bad ====================
+running 'bad source ./arg-printer.sh arg-to-sourced-script'
+arg-rpinter.sh: Number of arguments: 1
+arg-printer.sh: arg: 'arg-to-sourced-script'
+
+running 'bad source ./arg-printer.sh'
+arg-rpinter.sh: Number of arguments: 2
 arg-printer.sh: arg: 'source'
-arg-printer.sh: arg: 'arg-printer.sh'
+arg-printer.sh: arg: './arg-printer.sh'
+
+============= good ====================
+running 'good source ./arg-printer.sh arg-to-sourced-script'
+arg-rpinter.sh: Number of arguments: 1
+arg-printer.sh: arg: 'arg-to-sourced-script'
+
+running 'good source ./arg-printer.sh'
+arg-rpinter.sh: Number of arguments: 0
 #+end_src
 
-
+We see that in the 'bad' section, when there are no arguments, =arg-printer.sh=
+reports that it got two arguments, which is different from what we see when we
+run the command normally.
