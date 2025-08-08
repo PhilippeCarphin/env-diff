@@ -2,6 +2,7 @@ import os
 import json
 import sys
 import logging
+import envdifflogging
 
 class EnvDiffError(Exception):
     def __init__(self, directory, filename):
@@ -41,9 +42,9 @@ class ShellEnvironmentData:
                     self.shopt_set[opt] = val
             with open(os.path.join(data_dir, f"func_names.txt")) as f:
                 for name in f.read().splitlines():
-                    with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash")) as func:
+                    with open(os.path.join(data_dir, f"functions", f"BASH_FUNC_{name}.bash"), 'rb') as func:
                         lines = func.read().splitlines()[1:]
-                        self.functions[name] = lines
+                        self.functions[name] = [l.decode('utf-8', 'backslashreplace') for l in lines]
             with open(os.path.join(data_dir, f"traps.json")) as f:
                 self.traps = json.load(f)
         except FileNotFoundError as e:
