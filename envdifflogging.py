@@ -5,7 +5,7 @@ import os
 def configureLogging(format=None, level=logging.DEBUG):
     if format is None:
         name = os.path.basename(sys.argv[0])
-        format = "[" + name + " {levelname} - {funcName}()] {message}"
+        format = "[" + name + " {filename} {levelname} - {funcName}()] {message}"
 
     if sys.stderr.isatty():
         logging.addLevelName( logging.WARNING, f"\033[0;33m{logging.getLevelName(logging.WARNING)}\033[1;0m")
