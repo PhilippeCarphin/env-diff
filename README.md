@@ -145,10 +145,10 @@ env-diff-load(){
 
 # Details
 
-- [env-diff manpage](env-diff.org)
-- [env-diff-save manpage](env-diff-save.org)
-- [env-diff-gencode manpage](env-diff-gencode.org)
-- [env-diff-load manpage](env-diff-load.org)
+- [env-diff manpage](manpages/env-diff.org)
+- [env-diff-save manpage](manpages/env-diff-save.org)
+- [env-diff-gencode manpage](manpages/env-diff-gencode.org)
+- [env-diff-load manpage](manpages/env-diff-load.org)
 
 # Dependencies
 
