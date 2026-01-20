@@ -10,11 +10,11 @@ _env_diff_log(){
     local level=$1 ; shift
     local color
     case ${level} in
-        INTERNAL_ERROR) color=$'\033[1;41;37m' ;;
-        ERROR) color=$'\033[1;31m' ;;
-        WARNING) color=$'\033[33m' ;;
-        INFO) color=$'\033[35m' ;;
-        DEBUG) color=$'\033[36m' ;;
+        INTERNAL_ERROR) color="\033[1;41;37m" ;;
+        ERROR) color="\033[1;31m" ;;
+        WARNING) color="\033[33m" ;;
+        INFO) color="\033[35m" ;;
+        DEBUG) color="\033[36m" ;;
         *) _env_diff_log ERROR "Unknown log level ${level}" ; return 1 ;;
     esac
     local format="[${_env_diff_cmd} ${color}${level}\033[0m] %s\n"
