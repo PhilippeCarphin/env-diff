@@ -96,10 +96,10 @@ class ShCodeGenerator:
         common = set(i.keys()).intersection(set(f.keys()))
         changed = set(filter(lambda v: i[v] != f[v], common))
 
-        for k in new.union(changed):
+        for k in sorted(new.union(changed)):
             self.output.write(f"{name}[{k}]={shlib.quote_arg(f[k])}\n")
         deleted = set(i.keys()) - set(f.keys())
-        for k in deleted:
+        for k in sorted(deleted):
             if name == "BASH_ALIASES":
                 self.output.write(f"unalias {k}\n")
             else:
@@ -112,10 +112,10 @@ class ShCodeGenerator:
         self.output.write(f"declare -a {name}\n")
         if isinstance(value, list):
             raise RuntimeError("This shouldn't happen because regular arrays are saved as dictionaries too")
-            for i,v in enumerate(value):
+            for i,v in enumerate(sorted(value)):
                 self.output.write(f"{name}[i]={shlib.quote_arg(v)}\n")
         elif isinstance(value, dict):
-            for k,v in value.items():
+            for k,v in sorted(value).items():
                 self.output.write(f"{name}[{k}]={shlib.quote_arg(v)}\n")
         else:
             raise RuntimeError("Normal array value is not list or dict")
@@ -125,7 +125,7 @@ class ShCodeGenerator:
         # became an associative array.
         self.unset_var(name)
         self.output.write(f"declare -A {name}\n")
-        for k,v in value.items():
+        for k,v in sorted(value).items():
             self.output.write(f"{name}[{k}]={shlib.quote_arg(v)}\n")
 
     def set_shopt_option(self, name, value):
@@ -200,74 +200,74 @@ def gencode(diff, output):
 
     gen.box("ENVIRONMENT VARIABLES")
     gen.comment("Deleted env vars")
-    for name in diff.env_vars.deleted:
+    for name in sorted(diff.env_vars.deleted):
         if diff.deleted_env_var_moved(name):
             output.write(f"# variable {name} is in another section, don't unset, just unexport\n")
             gen.unexport_var(name)
         else:
             gen.unset_var(name)
     gen.comment("New env vars")
-    for name in diff.env_vars.new:
+    for name in sorted(diff.env_vars.new):
         gen.set_env_var(name, diff.env_vars.final[name])
     gen.comment("Changed env vars")
-    for name in diff.env_vars.changed:
+    for name in sorted(diff.env_vars.changed):
         gen.set_env_var(name, diff.env_vars.final[name])
 
     gen.box("SHELL VARIABLES")
     gen.comment("Deleted variables")
-    for name in diff.shell_vars.deleted:
+    for name in sorted(diff.shell_vars.deleted):
         if not diff.deleted_shell_var_moved(name):
             gen.unset_var(name)
     gen.comment("New variables")
-    for name in diff.shell_vars.new:
+    for name in sorted(diff.shell_vars.new):
         gen.set_var(name, diff.shell_vars.final[name])
     gen.comment("Changed variables")
-    for name in diff.shell_vars.changed:
+    for name in sorted(diff.shell_vars.changed):
         gen.set_var(name, diff.shell_vars.final[name])
 
     gen.box("NORMAL ARRAYS")
-    for name in diff.normal_arrays.deleted:
+    for name in sorted(diff.normal_arrays.deleted):
         if not diff.deleted_normal_array_moved(name):
             logging.debug(f"Unsetting deleted normal array {name}")
             gen.unset_var(name)
-    for name in diff.normal_arrays.new:
+    for name in sorted(diff.normal_arrays.new):
         logging.debug(f"Setting new normal array {name}")
         gen.set_normal_array(name, diff.normal_arrays.final[name])
-    for name in diff.normal_arrays.changed:
+    for name in sorted(diff.normal_arrays.changed):
         logging.debug(f"Changing normal array {name}")
         gen.change_array(name, diff.normal_arrays.initial[name], diff.normal_arrays.final[name])
 
     gen.box("ASSOC ARRAYS")
-    for name in diff.assoc_arrays.deleted:
+    for name in sorted(diff.assoc_arrays.deleted):
         if not diff.deleted_assoc_array_moved(name):
             gen.unset_var(name)
-    for name in diff.assoc_arrays.new:
+    for name in sorted(diff.assoc_arrays.new):
         gen.set_assoc_array(name, diff.assoc_arrays.final[name])
-    for name in diff.assoc_arrays.changed:
+    for name in sorted(diff.assoc_arrays.changed):
         gen.change_array(name, diff.assoc_arrays.initial[name], diff.assoc_arrays.final[name])
 
     gen.box("FUNCTIONS")
     gen.comment("Option expand_aliases must be off for function part")
     gen.comment("in case the name of the function is an alias")
     gen.set_shopt_option("expand_aliases", "off")
-    for name in diff.functions.deleted:
+    for name in sorted(diff.functions.deleted):
         gen.unset_func(name)
-    for name in diff.functions.new:
+    for name in sorted(diff.functions.new):
         gen.comment(f"Setting function {name}")
         gen.set_func(name, diff.functions.final[name])
-    for name in diff.functions.changed:
+    for name in sorted(diff.functions.changed):
         gen.set_func(name, diff.functions.final[name])
     if diff.shopt.final['expand_aliases'] == 'on' and 'expand_aliases' not in diff.shopt.changed:
         gen.set_shopt_option("expand_aliases", "on")
 
     gen.box("Shopt options")
-    for opt in diff.shopt.changed:
+    for opt in sorted(diff.shopt.changed):
         gen.set_shopt_option(opt, diff.shopt.final[opt])
 
     gen.box("Set options")
-    for opt in diff.shopt_set.changed:
+    for opt in sorted(diff.shopt_set.changed):
         gen.set_set_option(opt, diff.shopt_set.final[opt])
 
     gen.box("TRAPS")
-    for name in diff.traps.changed.union(diff.traps.new):
+    for name in sorted(diff.traps.changed.union(diff.traps.new)):
         gen.set_trap(name, diff.traps.final[name])
