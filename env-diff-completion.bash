@@ -46,6 +46,7 @@ _env_diff_load_options=(
     --debug
 )
 _env_diff_is_arg_option(){
+    local o
     for o in "${_env_diff_cmd_arg_options[@]}" ; do
         if [[ "${o}" == "${1}" ]] ; then
             return 0
@@ -60,6 +61,7 @@ _env_diff(){
 
     # Iterate on words before the one at index cword (note: cword is
     # for "cursor word", the index of the word containing the cursor)
+    local i
     for ((i=1;i<cword;i++)) ; do
         if [[ "${words[i]}" == "--" ]] ; then
             return
