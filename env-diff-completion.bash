@@ -55,35 +55,67 @@ _env_diff_is_arg_option(){
     return 1
 }
 
+_env_diff_get_completion_func(){
+    local cmd=$1
+    local compspec
+    if ! compspec=($(complete -p ${cmd} 2>/dev/null)) ; then
+        if declare -F _completion_loader >/dev/null 2>&1 ; then
+            _completion_loader ${cmd}
+            echo _completion_loader ${cmd} >> ~/.log.txt
+            complete -p ${cmd} &>> ~/.log.txt
+        fi
+        if ! compspec=($(complete -p ${cmd})) ; then
+            return 1
+        fi
+    fi
+    for ((i=1;i<${#compspec[@]};i++)) ; do
+        case ${compspec[i]} in -F) comp_func=${compspec[i+1]} ; return 0 ;; esac
+    done
+}
+
 _env_diff(){
     local cur prev words cword
     _init_completion || return
 
+    local posargs=()
     # Iterate on words before the one at index cword (note: cword is
     # for "cursor word", the index of the word containing the cursor)
     local i
-    for ((i=1;i<cword;i++)) ; do
+    for ((i=1;i<=cword;i++)) ; do
         if [[ "${words[i]}" == "--" ]] ; then
             return
         fi
 
         if _env_diff_is_arg_option "${words[i]}" ; then
+            # current word is an option that takes an argument,
+            # don't count the next word
             ((i++))
             continue
         fi
 
         if [[ "${words[i]}" == -* ]] ; then
+            # Current argument is an option
             continue
-        else
-            # As soon as we spot a word on the command line that is
-            # not an option and not the argument to an option
-            # we are writing the COMMAND argument and completion should stop
-            compopt -o default
-            return
         fi
+        posargs+=("${words[i]}")
     done
+    if [[ ${cur} != -* ]] ; then
+        if ((${#posargs[@]} == 1)) ; then
+            COMPREPLY=($(compgen -c -- ${cur}))
+        else
+            local comp_func
+            if _env_diff_get_completion_func ${posargs[0]} ; then
+                COMP_WORDS=("${posargs[@]}")
+                COMP_CWORD=$((${#posargs[*]}-1))
+                echo ${comp_func} "${cmd}" "${posargs[-1]:-}" "${posargs[-2]:-}" >> ~/.log.txt
+                ${comp_func} "${cmd}" "${posargs[-1]:-}" "${posargs[-2]:-}"
+                return
+            fi
+            compopt -o default
+        fi
+    fi
 
-    COMPREPLY=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_cmd_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
+    COMPREPLY+=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_cmd_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
 }
 
 _env_diff_compare(){
