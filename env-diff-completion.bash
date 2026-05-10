@@ -55,21 +55,27 @@ _env_diff_is_arg_option(){
     return 1
 }
 
-_env_diff_get_completion_func(){
-    local cmd=$1
+_env_diff_delegate_completion(){
     local compspec
-    if ! compspec=($(complete -p ${cmd} 2>/dev/null)) ; then
+    if ! compspec=($(complete -p ${posargs[0]} 2>/dev/null)) ; then
         if declare -F _completion_loader >/dev/null 2>&1 ; then
-            _completion_loader ${cmd}
-            echo _completion_loader ${cmd} >> ~/.log.txt
-            complete -p ${cmd} &>> ~/.log.txt
+            _completion_loader ${posargs[0]}
         fi
-        if ! compspec=($(complete -p ${cmd})) ; then
+        if ! compspec=($(complete -p ${posargs[0]})) ; then
             return 1
         fi
     fi
+
     for ((i=1;i<${#compspec[@]};i++)) ; do
-        case ${compspec[i]} in -F) comp_func=${compspec[i+1]} ; return 0 ;; esac
+        case ${compspec[i]} in
+            -F) local comp_func=${compspec[++i]}
+                COMP_WORDS=("${posargs[@]}")
+                COMP_CWORD=$((${#posargs[*]}-1))
+                ${comp_func} "${posargs[0]}" "${posargs[-1]:-}" "${posargs[-2]:-}"
+                ;;
+            -v) COMPREPLY+=( $(compgen -v -- "${cur}") ) ;;
+            -A) COMPREPLY+=( $(compgen -A ${compspec[++i]} -- "${cur}") ) ;;
+        esac
     done
 }
 
@@ -95,15 +101,7 @@ _env_diff(){
     case ${#posargs[@]} in
         0) COMPREPLY+=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_cmd_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) ) ;;
         1) COMPREPLY+=($(compgen -c -- ${cur})) ;;
-        *) local comp_func
-           if _env_diff_get_completion_func ${posargs[0]} ; then
-               COMP_WORDS=("${posargs[@]}")
-               COMP_CWORD=$((${#posargs[*]}-1))
-               ${comp_func} "${posargs[0]}" "${posargs[-1]:-}" "${posargs[-2]:-}"
-               return
-           fi
-           compopt -o default
-           ;;
+        *) _env_diff_delegate_completion ;;
    esac
 }
 
