@@ -74,49 +74,39 @@ _env_diff_get_completion_func(){
 }
 
 _env_diff(){
-    local cur prev words cword
+    local cur prev words cword posargs=() i
     _init_completion || return
 
-    local posargs=()
-    # Iterate on words before the one at index cword (note: cword is
-    # for "cursor word", the index of the word containing the cursor)
-    local i
+    # Skip words until we find an argument that is not an
+    # option for env-diff or the argument to an env-diff
+    # option that takes an argument
     for ((i=1;i<=cword;i++)) ; do
-        if [[ "${words[i]}" == "--" ]] ; then
-            return
-        fi
-
         if _env_diff_is_arg_option "${words[i]}" ; then
-            # current word is an option that takes an argument,
-            # don't count the next word
             ((i++))
             continue
         fi
-
         if [[ "${words[i]}" == -* ]] ; then
-            # Current argument is an option
             continue
         fi
-        posargs+=("${words[i]}")
+        break
     done
-    if [[ ${cur} != -* ]] ; then
-        if ((${#posargs[@]} == 1)) ; then
-            COMPREPLY=($(compgen -c -- ${cur}))
-        else
-            local comp_func
-            if _env_diff_get_completion_func ${posargs[0]} ; then
-                COMP_WORDS=("${posargs[@]}")
-                COMP_CWORD=$((${#posargs[*]}-1))
-                echo ${comp_func} "${cmd}" "${posargs[-1]:-}" "${posargs[-2]:-}" >> ~/.log.txt
-                ${comp_func} "${cmd}" "${posargs[-1]:-}" "${posargs[-2]:-}"
-                return
-            fi
-            compopt -o default
-        fi
-    fi
+    posargs=("${words[@]:i}")
 
-    COMPREPLY+=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_cmd_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
+    case ${#posargs[@]} in
+        0) COMPREPLY+=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_cmd_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) ) ;;
+        1) COMPREPLY+=($(compgen -c -- ${cur})) ;;
+        *) local comp_func
+           if _env_diff_get_completion_func ${posargs[0]} ; then
+               COMP_WORDS=("${posargs[@]}")
+               COMP_CWORD=$((${#posargs[*]}-1))
+               ${comp_func} "${posargs[0]}" "${posargs[-1]:-}" "${posargs[-2]:-}"
+               return
+           fi
+           compopt -o default
+           ;;
+   esac
 }
+
 
 _env_diff_compare(){
     local cur prev words cword
