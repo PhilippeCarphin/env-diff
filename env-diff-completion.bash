@@ -22,6 +22,7 @@ _env_diff_options=(
 )
 
 _env_diff_compare_options=(
+    --only
     --no-ignore
     --keep-tmpdir
     --local-tmpdir
@@ -45,6 +46,15 @@ _env_diff_load_options=(
     --help
     --debug
 )
+_env_diff_compare_option_only_values=(
+    functions
+    shell-options
+    arrays
+    assoc-arrays
+    env-vars
+    shell-vars
+)
+
 _env_diff_is_arg_option(){
     local o
     for o in "${_env_diff_cmd_arg_options[@]}" ; do
@@ -109,9 +119,26 @@ _env_diff(){
 _env_diff_compare(){
     local cur prev words cword
     _init_completion || return
-
+    declare -p words >&${BASH_XTRACEFD:-2}
     if [[ ${cur} == -* ]] ; then
         COMPREPLY=( $(compgen -W "${_env_diff_options[*]} ${_env_diff_compare_options[*]}" -- ${cur}) )
+    # Not a big fan of `--option=value` and I prefer `--option value` but just
+    # for fun, lets try it:  There are cases
+    # - We have an equal sign
+    #   - words=(... [-2]=--only [-1]='=')
+    #   - words=(... [-3]=--only [-2]='=' [-1]=e)
+    #   - words
+    elif [[ ${prev} == --only ]] ; then
+        if [[ ${cur} == '=' ]] ; then
+            COMPREPLY=( $(compgen -W "${_env_diff_compare_option_only_values[*]}" -- '') )
+        else
+            COMPREPLY=( $(compgen -W "${_env_diff_compare_option_only_values[*]}" -- ${cur}) )
+        fi
+        return
+    elif [[ ${prev} == '=' ]] && [[ ${words[-3]} == --only ]] ; then
+        echo "BINGBONG" >&${BASH_XTRACEFD:-2}
+        COMPREPLY=( $(compgen -W "${_env_diff_compare_option_only_values[*]}" -- ${cur}) )
+        return
     fi
     _filedir -d
 }

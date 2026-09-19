@@ -1,4 +1,7 @@
 
+# NOTE: Not using HEREDOCS because the `module source-sh bash <this-file>`
+# cannot handle them.
+
 if ! (return 0 2>/dev/null) ; then
     echo "This script must be sourced and should not have execute permissions"
     exit 1;
@@ -25,23 +28,21 @@ _env_diff_log(){
 }
 
 _env-diff-short_help(){
-    cat <<- EOF
-		env-diff [options] COMMAND
-
-		    Display the effect of COMMAND on the shell environment: exported
-		    variables, unexported variables, arrays, associative arrays, shell
-		    functions, shell options and traps.
-
-		OPTIONS
-		    --list-diff             Use diff for list comparison
-		    --no-ignore             Bypass ignoring of variables
-		    -F CONFIG FILE          Use alternate config file
-		    --keep-tmpdir           Do not delete temp dir after running
-		    --local-tmpdir          Create temp dir in PWD
-		    --help                  Display manpage for env-diff
-		    --show-function-bodies  Show code of modified/added functions
-		    -h                      Display this help text and exit
-	EOF
+    printf "env-diff [options] COMMAND\n"
+    printf "\n"
+    printf "    Display the effect of COMMAND on the shell environment: exported\n"
+    printf "    variables, unexported variables, arrays, associative arrays, shell\n"
+    printf "    functions, shell options and traps.\n"
+    printf "\n"
+    printf "OPTIONS\n"
+    printf "    --list-diff             Use diff for list comparison\n"
+    printf "    --no-ignore             Bypass ignoring of variables\n"
+    printf "    -F CONFIG FILE          Use alternate config file\n"
+    printf "    --keep-tmpdir           Do not delete temp dir after running\n"
+    printf "    --local-tmpdir          Create temp dir in PWD\n"
+    printf "    --help                  Display manpage for env-diff\n"
+    printf "    --show-function-bodies  Show code of modified/added functions\n"
+    printf "    -h                      Display this help text and exit\n"
 }
 
 ################################################################################
@@ -106,19 +107,17 @@ env-diff(){
 
 env-diff-gencode(){
     if [[ $1 == -h ]] ; then
-        cat <<-EOF
-			usage: ${FUNCNAME[0]} [-h|--help] [--debug] [--output FILE] BEFORE AFTER
-
-			    Generate shell code to go from environment BEFORE to environment AFTER
-			    where BEFORE and AFTER are directories created with env-diff-save.
-
-			Options:
-
-			    -h                Print short help
-			    --help            Show manpage
-			    --debug           Set log level to debug
-			    --output FILE     Set ouput to FILE (default is STDOUT)
-		EOF
+        printf "usage: ${FUNCNAME[0]} [-h|--help] [--debug] [--output FILE] BEFORE AFTER\n"
+        printf "\n"
+        printf "    Generate shell code to go from environment BEFORE to environment AFTER\n"
+        printf "    where BEFORE and AFTER are directories created with env-diff-save.\n"
+        printf "\n"
+        printf "Options:\n"
+        printf "\n"
+        printf "    -h                Print short help\n"
+        printf "    --help            Show manpage\n"
+        printf "    --debug           Set log level to debug\n"
+        printf "    --output FILE     Set ouput to FILE (default is STDOUT)\n"
         return
     elif [[ $1 == --help ]] ; then
         man ${_env_diff_root}/manpages/env-diff-gencode.1
@@ -131,18 +130,16 @@ env-diff-gencode(){
 
 env-diff-load(){
     if [[ $1 == -h ]] ; then
-        cat <<-EOF
-			usage: ${FUNCNAME[0]} [-h|--help] [--debug] DIR
-
-			    Load environment DIR where DIR is a saved environment created
-			    with env-diff-save
-
-			Options:
-
-			    -h                Print short help
-			    --help            Show manpage
-			    --debug           Set log level to debug
-		EOF
+        printf "usage: ${FUNCNAME[0]} [-h|--help] [--debug] DIR\n"
+        printf "\n"
+        printf "    Load environment DIR where DIR is a saved environment created\n"
+        printf "    with env-diff-save\n"
+        printf "\n"
+        printf "Options:\n"
+        printf "\n"
+        printf "    -h                Print short help\n"
+        printf "    --help            Show manpage\n"
+        printf "    --debug           Set log level to debug\n"
         return
     elif [[ $1 == --help ]] ; then
         man ${_env_diff_root}/manpages/env-diff-load.1
@@ -280,12 +277,10 @@ env-diff-save(){
     fi
 
     if [[ "$1" == -h ]] ; then
-        cat <<-EOF
-			${FUNCNAME[0]} DIR
-
-			Save all info for use by env-diff-compare.
-			Run \`env-diff-save --help\` for more information
-		EOF
+        printf "${FUNCNAME[0]} DIR\n"
+        printf "\n"
+        printf "Save all info for use by env-diff-compare.\n"
+        printf "Run \`env-diff-save --help\` for more information\n"
         return 0
     elif [[ "$1" == --help ]] ; then
         man ${_env_diff_root}/manpages/env-diff-save.1

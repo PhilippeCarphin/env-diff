@@ -63,6 +63,7 @@ def get_args():
     p = argparse.ArgumentParser()
     p.add_argument("--list-diff", action='store_true')
     p.add_argument("--no-ignore", action='store_true')
+    p.add_argument("--only", type=str, choices=['functions', 'shell-options', 'arrays', 'assoc-arrays', 'env-vars', 'shell-vars'], help="Restrict report to only one group")
     p.add_argument("-F", dest="config_file", default=os.path.expanduser("~/.config/env-diff.yml"), help="Select alternate config file")
     p.add_argument("--show-function-bodies", action='store_true', help="Show bodies of new functions")
     p.add_argument("--debug", help="Set log level to debug", action='store_true')
@@ -115,14 +116,25 @@ def main():
     # - This file would be more like the new env-diff-generate-code.py
     before = envdiff.ShellEnvironmentData(args.initial)
     after = envdiff.ShellEnvironmentData(args.final)
-    compare_variables(before.env_vars, after.env_vars, env=True)
-    compare_variables(before.shell_vars, after.shell_vars, env=False)
-    compare_associative_arrays(before.assoc_arrays, after.assoc_arrays)
-    compare_normal_arrays(before.normal_arrays, after.normal_arrays)
-    compare_shell_options(before.shopt, after.shopt, from_set=False)
-    compare_shell_options(before.shopt_set, after.shopt_set, from_set=True)
-    compare_shell_functions(before.functions, after.functions, args.show_function_bodies)
-    compare_traps(before.traps, after.traps)
+    only_map = {
+        'functions': lambda x : compare_shell_functions(before.functions, after.functions, args.show_function_bodies),
+        'shell-options': lambda : compare_shell_options(before.shopt, after.shopt, from_set=False) or compare_shell_options(before.shopt_set, after.shopt_set, from_set=True),
+        'arrays': lambda : compare_normal_arrays(before.normal_arrays, after.normal_arrays),
+        'assoc-arrays': lambda : compare_associative_arrays(before.assoc_arrays, after.assoc_arrays),
+        'env-vars': lambda : compare_variables(before.env_vars, after.env_vars, env=True),
+        'shell-vars': lambda : compare_variables(before.shell_vars, after.shell_vars, env=False),
+    }
+    if args.only:
+        only_map[args.only]()
+    else:
+        compare_variables(before.env_vars, after.env_vars, env=True)
+        compare_variables(before.shell_vars, after.shell_vars, env=False)
+        compare_associative_arrays(before.assoc_arrays, after.assoc_arrays)
+        compare_normal_arrays(before.normal_arrays, after.normal_arrays)
+        compare_shell_options(before.shopt, after.shopt, from_set=False)
+        compare_shell_options(before.shopt_set, after.shopt_set, from_set=True)
+        compare_shell_functions(before.functions, after.functions, args.show_function_bodies)
+        compare_traps(before.traps, after.traps)
 
 def compare_variables(i: dict,f: dict, env):
     """
@@ -263,10 +275,13 @@ def compare_shell_options(i: dict, f: dict, from_set=False):
     """
     Print differences between shell options
     """
+    new = set(f.keys()) - set(i.keys())
+    deleted = set(i.keys()) - set(f.keys())
+    common = set(i.keys()).intersection(set(f.keys())) - ignored_normal_arrays
     if set(i.keys()) != set(f.keys()):
         print(set(i.keys()).difference(set(f.keys())))
     changes = []
-    for k in i:
+    for k in common:
         if i[k] != f[k]:
             changes.append(f"{k}: {i[k]} -> {f[k]}")
     if changes:
@@ -275,6 +290,10 @@ def compare_shell_options(i: dict, f: dict, from_set=False):
         else:
             print("\033[1m================= SHELL OPTIONS ================\033[0m")
         print('\n'.join(changes))
+        if new or deleted:
+            print(f"The versions of BASH used to save the environments do not have the same set of options...")
+            if deleted: print(f"Options unique to the initial version: {deleted}")
+            if new: print(f"Options unique to the final version: {new}")
 
 
 def compare_shell_functions(i: dict, f: dict, show_new_defs=True):
