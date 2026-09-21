@@ -115,7 +115,7 @@ class ShCodeGenerator:
             for i,v in enumerate(sorted(value)):
                 self.output.write(f"{name}[i]={shlib.quote_arg(v)}\n")
         elif isinstance(value, dict):
-            for k,v in sorted(value).items():
+            for k,v in sorted(value.items()):
                 self.output.write(f"{name}[{k}]={shlib.quote_arg(v)}\n")
         else:
             raise RuntimeError("Normal array value is not list or dict")
@@ -125,7 +125,7 @@ class ShCodeGenerator:
         # became an associative array.
         self.unset_var(name)
         self.output.write(f"declare -A {name}\n")
-        for k,v in sorted(value).items():
+        for k,v in sorted(value.items()):
             self.output.write(f"{name}[{k}]={shlib.quote_arg(v)}\n")
 
     def set_shopt_option(self, name, value):
