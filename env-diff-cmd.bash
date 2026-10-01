@@ -312,7 +312,7 @@ env-diff-save(){
 _env-diff-save_all_info(){
     compgen -v | ${_env_diff_sort} >$1/all_vars.txt || return 1
     compgen -e | ${_env_diff_sort} >$1/env_vars.txt || return 1
-    compgen -A arrayvar | ${_env_diff_sort} >$1/arrays.txt || return 1# includes associative arrays
+    compgen -A arrayvar | ${_env_diff_sort} >$1/arrays.txt || return 1 # includes associative arrays
     declare -A | ${_env_diff_cut} -d ' ' -f 3 | ${_env_diff_cut} -d = -f 1 | ${_env_diff_sort} > $1/assoc_arrays.txt || return 1
 
     # Shell variables = all_vars - env_vars - array_vars - assoc_arrays
@@ -332,7 +332,7 @@ _env-diff-save_all_info(){
     ${_env_diff_comm} -23 $1/arrays.txt $1/assoc_arrays.txt > $1/normal_arrays.txt || return 1
 
     # Dump all variables to JSON
-    ${_env_diff_python3} -c "import os,json ; print(json.dumps(dict(os.environ)))" >$1/env_vars.json || return 1
+    <$1/env_vars.txt _env-diff-shell_vars_to_json > $1/env_vars.json || return 1
     <$1/shell_vars.txt _env-diff-shell_vars_to_json > $1/shell_vars.json || return 1
     <$1/assoc_arrays.txt _env-diff-assoc_arrays_to_json > $1/assoc_arrays.json || return 1
     <$1/normal_arrays.txt _env-diff-assoc_arrays_to_json > $1/normal_arrays.json || return 1
